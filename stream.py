@@ -49,14 +49,8 @@ def stream_movie(movie):
 
     command = [
         "ffmpeg",
-        "-rw_timeout", "5000000",
-        "-reconnect", "1",
-        "-reconnect_streamed", "1",
-        "-reconnect_delay_max", "2",
-        "-fflags", "nobuffer",
-        "-flags", "low_delay",
-        "-probesize", "1M",
-        "-analyzeduration", "2M",
+        "-re",  # Stream in real time
+        "-timeout", "5000000",
         "-i", url,
         "-i", OVERLAY,
         "-filter_complex",
@@ -68,19 +62,18 @@ def stream_movie(movie):
             "[vo]drawtext=fontfile='{font}':text='{text}':fontcolor=white:fontsize=20:x=20:y=20"
         ).format(font=FONT_PATH, text=text),
         "-c:v", "libx264",
-        "-preset", "ultrafast",
-        "-crf", "24",
+        "-preset", "veryfast",
+        "-crf", "23",
         "-tune", "zerolatency",
         "-g", "60",
         "-keyint_min", "60",
         "-sc_threshold", "0",
         "-pix_fmt", "yuv420p",
-        "-vsync", "2",
         "-c:a", "aac",
-        "-b:a", "96k",
+        "-b:a", "128k",
         "-ar", "44100",
-        "-movflags", "+faststart",
         "-f", "flv",
+        "-flvflags", "no_duration_filesize",
         RTMP_URL
     ]
 

@@ -50,10 +50,15 @@ def stream_movie(movie):
 
     command = [
         "ffmpeg",
-        "-ss", f"{PREBUFFER_SECONDS}",  # Start 10 seconds late for buffering
-        "-thread_queue_size", "512",
-        "-fflags", "+genpts+discardcorrupt",
         "-re",
+        "-threads", "2",
+        "-fflags", "+nobuffer+genpts+discardcorrupt",
+        "-probesize", "50M",
+        "-analyzeduration", "10M",
+        "-rw_timeout", "5000000",
+        "-timeout", "5000000",
+        "-ss", f"{PREBUFFER_SECONDS}",
+        "-thread_queue_size", "512",
         "-i", url,
         "-i", OVERLAY,
         "-filter_complex",
@@ -75,8 +80,9 @@ def stream_movie(movie):
         "-c:a", "aac",
         "-b:a", "128k",
         "-ar", "44100",
-        "-bufsize", "1000k",
-        "-maxrate", "1200k",
+        "-bufsize", "2000k",
+        "-maxrate", "1500k",
+        "-flush_packets", "1",
         "-f", "flv",
         RTMP_URL
     ]

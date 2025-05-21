@@ -42,7 +42,7 @@ def load_movies():
         return []
 
 def escape_drawtext(text):
-    """Escape only necessary characters for FFmpeg drawtext without showing visible backslashes."""
+    """Escape special characters for FFmpeg drawtext."""
     return text.replace('\\', '\\\\\\\\').replace(':', '\\:').replace("'", "\\'")
 
 def stream_movie(movie):
@@ -58,26 +58,30 @@ def stream_movie(movie):
 
     command = [
         "ffmpeg",
+        "-rw_timeout", "5000000",               # 5s timeout on remote reads
+        "-reconnect", "1",                      # Auto reconnect input
+        "-reconnect_streamed", "1",
+        "-reconnect_delay_max", "2",
         "-fflags", "nobuffer",
         "-flags", "low_delay",
-        "-probesize", "500k",
+        "-probesize", "512k",
         "-analyzeduration", "1M",
         "-i", url,
         "-i", OVERLAY,
         "-filter_complex",
         f"[0:v][1:v]scale2ref[v0][v1];[v0][v1]overlay=0:0,drawtext=fontfile='{FONT_PATH}':text='{overlay_text}':fontcolor=white:fontsize=20:x=35:y=35",
         "-c:v", "libx264",
-        "-profile:v", "main",
         "-preset", "ultrafast",
         "-tune", "zerolatency",
-        "-b:v", "2800k",
-        "-maxrate", "2800k",
-        "-bufsize", "1000k",
-        "-pix_fmt", "yuv420p",
-        "-g", "25",
+        "-g", "50",
+        "-keyint_min", "50",
         "-sc_threshold", "0",
+        "-b:v", "2500k",
+        "-maxrate", "2500k",
+        "-bufsize", "500k",
+        "-pix_fmt", "yuv420p",
         "-c:a", "aac",
-        "-b:a", "160k",
+        "-b:a", "128k",
         "-ar", "44100",
         "-f", "flv",
         RTMP_URL
@@ -88,7 +92,7 @@ def stream_movie(movie):
     try:
         process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
         for line in process.stderr:
-            print(line, end="")  # Optional: Log FFmpeg stderr output
+            print(line, end="")  # Show FFmpeg output
         process.wait()
     except Exception as e:
         print(f"❌ ERROR: FFmpeg failed for '{title}' - {str(e)}")
@@ -107,7 +111,6 @@ def main():
     while True:
         movie = movies[index]
         stream_movie(movie)
-
         index = (index + 1) % len(movies)
         print("🔄 Movie ended. Playing next movie...")
 

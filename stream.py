@@ -57,11 +57,30 @@ def stream_movie(movie):
     overlay_text = escape_drawtext(title)
 
     command = [
-        "ffmpeg", "-re", "-fflags", "nobuffer", "-i", url, "-i", OVERLAY, "-filter_complex",
+        "ffmpeg",
+        "-fflags", "nobuffer",
+        "-flags", "low_delay",
+        "-probesize", "500k",
+        "-analyzeduration", "1M",
+        "-i", url,
+        "-i", OVERLAY,
+        "-filter_complex",
         f"[0:v][1:v]scale2ref[v0][v1];[v0][v1]overlay=0:0,drawtext=fontfile='{FONT_PATH}':text='{overlay_text}':fontcolor=white:fontsize=20:x=35:y=35",
-        "-c:v", "libx264", "-profile:v", "main", "-preset", "veryfast", "-tune", "zerolatency", "-b:v", "2800k",
-        "-maxrate", "2800k", "-bufsize", "4000k", "-pix_fmt", "yuv420p", "-g", "50", "-vsync", "cfr",
-        "-c:a", "aac", "-b:a", "320k", "-ar", "48000", "-f", "flv", "-rtmp_live", "live", RTMP_URL
+        "-c:v", "libx264",
+        "-profile:v", "main",
+        "-preset", "ultrafast",
+        "-tune", "zerolatency",
+        "-b:v", "2800k",
+        "-maxrate", "2800k",
+        "-bufsize", "1000k",
+        "-pix_fmt", "yuv420p",
+        "-g", "25",
+        "-sc_threshold", "0",
+        "-c:a", "aac",
+        "-b:a", "160k",
+        "-ar", "44100",
+        "-f", "flv",
+        RTMP_URL
     ]
 
     print(f"🎬 Now Streaming: {title}")
@@ -69,7 +88,7 @@ def stream_movie(movie):
     try:
         process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
         for line in process.stderr:
-            print(line, end="")  # Optional: Log errors in real-time
+            print(line, end="")  # Optional: Log FFmpeg stderr output
         process.wait()
     except Exception as e:
         print(f"❌ ERROR: FFmpeg failed for '{title}' - {str(e)}")
@@ -83,13 +102,12 @@ def main():
         time.sleep(RETRY_DELAY)
         return main()
 
-    index = 0  # Track current movie index
+    index = 0
 
     while True:
         movie = movies[index]
         stream_movie(movie)
 
-        # Move to the next movie, looping back if at the end
         index = (index + 1) % len(movies)
         print("🔄 Movie ended. Playing next movie...")
 

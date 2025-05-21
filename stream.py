@@ -7,12 +7,12 @@ import time
 PLAY_FILE = "play.json"
 RTMP_URL = os.getenv("RTMP_URL")
 OVERLAY = os.path.abspath("overlay.png")
-FONT_PATH = os.path.abspath("Roboto-Black.ttf")  # Full path to your font file
+FONT_PATH = os.path.abspath("Roboto-Black.ttf")
 RETRY_DELAY = 60
 
 # ✅ Check if RTMP_URL is set
 if not RTMP_URL:
-    print("❌ ERROR: RTMP_URL environment variable is NOT set! Check configuration.")
+    print("❌ ERROR: RTMP_URL environment variable is NOT set!")
     exit(1)
 
 # ✅ Ensure required files exist
@@ -58,14 +58,14 @@ def stream_movie(movie):
 
     command = [
         "ffmpeg",
-        "-rw_timeout", "5000000",               # 5s timeout on remote reads
-        "-reconnect", "1",                      # Auto reconnect input
+        "-rw_timeout", "5000000",
+        "-reconnect", "1",
         "-reconnect_streamed", "1",
         "-reconnect_delay_max", "2",
         "-fflags", "nobuffer",
         "-flags", "low_delay",
-        "-probesize", "512k",
-        "-analyzeduration", "1M",
+        "-probesize", "1M",
+        "-analyzeduration", "2M",
         "-i", url,
         "-i", OVERLAY,
         "-filter_complex",
@@ -78,8 +78,10 @@ def stream_movie(movie):
         "-sc_threshold", "0",
         "-b:v", "2500k",
         "-maxrate", "2500k",
-        "-bufsize", "500k",
+        "-bufsize", "1000k",
         "-pix_fmt", "yuv420p",
+        "-vsync", "2",
+        "-fps_mode", "auto",
         "-c:a", "aac",
         "-b:a", "128k",
         "-ar", "44100",
@@ -92,22 +94,20 @@ def stream_movie(movie):
     try:
         process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
         for line in process.stderr:
-            print(line, end="")  # Show FFmpeg output
+            print(line, end="")  # Optional: view FFmpeg logs
         process.wait()
     except Exception as e:
         print(f"❌ ERROR: FFmpeg failed for '{title}' - {str(e)}")
 
 def main():
-    """Continuously play movies from play.json in a loop."""
+    """Continuously stream movies from play.json."""
     movies = load_movies()
-
     if not movies:
         print(f"🔄 No movies found! Retrying in {RETRY_DELAY} seconds...")
         time.sleep(RETRY_DELAY)
         return main()
 
     index = 0
-
     while True:
         movie = movies[index]
         stream_movie(movie)

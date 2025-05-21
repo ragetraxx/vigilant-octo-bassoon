@@ -10,8 +10,9 @@ OVERLAY = os.path.abspath("overlay.png")
 FONT_PATH = os.path.abspath("Roboto-Black.ttf")
 RETRY_DELAY = 60
 
+# ✅ Sanity Checks
 if not RTMP_URL:
-    print("❌ ERROR: RTMP_URL environment variable is NOT set!")
+    print("❌ ERROR: RTMP_URL is not set!")
     exit(1)
 
 if not os.path.exists(PLAY_FILE):
@@ -29,13 +30,9 @@ if not os.path.exists(FONT_PATH):
 def load_movies():
     try:
         with open(PLAY_FILE, "r") as f:
-            movies = json.load(f)
-        if not movies:
-            print("❌ ERROR: No movies in play.json!")
-            return []
-        return movies
-    except (json.JSONDecodeError, IOError) as e:
-        print(f"❌ ERROR loading play.json - {str(e)}")
+            return json.load(f) or []
+    except Exception as e:
+        print(f"❌ Failed to load {PLAY_FILE}: {e}")
         return []
 
 def escape_drawtext(text):
@@ -45,10 +42,10 @@ def stream_movie(movie):
     title = movie.get("title", "Unknown Title")
     url = movie.get("url")
     if not url:
-        print(f"❌ Missing URL for movie '{title}'")
+        print(f"❌ Missing URL for '{title}'")
         return
 
-    overlay_text = escape_drawtext(title)
+    text = escape_drawtext(title)
 
     command = [
         "ffmpeg",
@@ -63,9 +60,13 @@ def stream_movie(movie):
         "-i", url,
         "-i", OVERLAY,
         "-filter_complex",
-        f"[0:v]scale=w=854:h=480:force_original_aspect_ratio=decrease,pad=854:480:(ow-iw)/2:(oh-ih)/2[vscaled];" +
-        f"[vscaled][1:v]overlay=0:0[voverlay];" +
-        f"[voverlay]drawtext=fontfile='{FONT_PATH}':text='{overlay_text}':fontcolor=white:fontsize=18:x=20:y=20",
+        (
+            "[0:v]scale=854:480:force_original_aspect_ratio=decrease,"
+            "pad=854:480:(ow-iw)/2:(oh-ih)/2[v];"
+            "[1:v]scale=854:480[ol];"
+            "[v][ol]overlay=0:0[vo];"
+            "[vo]drawtext=fontfile='{font}':text='{text}':fontcolor=white:fontsize=20:x=20:y=20"
+        ).format(font=FONT_PATH, text=text),
         "-c:v", "libx264",
         "-preset", "ultrafast",
         "-crf", "24",
@@ -75,7 +76,6 @@ def stream_movie(movie):
         "-sc_threshold", "0",
         "-pix_fmt", "yuv420p",
         "-vsync", "2",
-        "-fps_mode", "auto",
         "-c:a", "aac",
         "-b:a", "96k",
         "-ar", "44100",
@@ -91,12 +91,12 @@ def stream_movie(movie):
             print(line, end="")
         process.wait()
     except Exception as e:
-        print(f"❌ FFmpeg failed: {e}")
+        print(f"❌ FFmpeg error: {e}")
 
 def main():
     movies = load_movies()
     if not movies:
-        print(f"🔄 Retrying in {RETRY_DELAY}s...")
+        print(f"🔁 No movies. Retrying in {RETRY_DELAY}s...")
         time.sleep(RETRY_DELAY)
         return main()
 
@@ -104,7 +104,7 @@ def main():
     while True:
         stream_movie(movies[index])
         index = (index + 1) % len(movies)
-        print("🔄 Movie ended. Next one...")
+        print("🔁 Moving to next video...")
 
 if __name__ == "__main__":
     main()

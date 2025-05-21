@@ -46,26 +46,31 @@ def stream_movie(movie):
         print(f"❌ Missing URL for '{title}'")
         return
 
+    if url.startswith("http"):
+        print(f"⚠️ Streaming from remote URL: {url} — may cause buffering.")
+
     text = escape_drawtext(title)
 
     command = [
         "ffmpeg",
         "-re",
+        "-ss", f"{PREBUFFER_SECONDS}",
         "-threads", "2",
         "-fflags", "+nobuffer+genpts+discardcorrupt",
+        "-flags", "low_delay",
+        "-avioflags", "direct",
         "-probesize", "50M",
         "-analyzeduration", "10M",
         "-rw_timeout", "5000000",
         "-timeout", "5000000",
-        "-ss", f"{PREBUFFER_SECONDS}",
         "-thread_queue_size", "512",
         "-i", url,
         "-i", OVERLAY,
         "-filter_complex",
         (
-            "[0:v]scale=854:480:force_original_aspect_ratio=decrease,"
-            "pad=854:480:(ow-iw)/2:(oh-ih)/2[v];"
-            "[1:v]scale=854:480[ol];"
+            "[0:v]scale=640:360:force_original_aspect_ratio=decrease,"
+            "pad=640:360:(ow-iw)/2:(oh-ih)/2[v];"
+            "[1:v]scale=640:360[ol];"
             "[v][ol]overlay=0:0[vo];"
             "[vo]drawtext=fontfile='{font}':text='{text}':fontcolor=white:fontsize=15:x=20:y=20"
         ).format(font=FONT_PATH, text=text),
@@ -75,13 +80,13 @@ def stream_movie(movie):
         "-g", "60",
         "-keyint_min", "60",
         "-sc_threshold", "0",
-        "-crf", "23",
+        "-b:v", "800k",
+        "-bufsize", "1200k",
+        "-maxrate", "1000k",
         "-pix_fmt", "yuv420p",
         "-c:a", "aac",
         "-b:a", "128k",
         "-ar", "44100",
-        "-bufsize", "2000k",
-        "-maxrate", "1500k",
         "-flush_packets", "1",
         "-f", "flv",
         RTMP_URL
@@ -107,7 +112,8 @@ def main():
     while True:
         stream_movie(movies[index])
         index = (index + 1) % len(movies)
-        print("🔁 Moving to next video...")
+        print("⏳ Waiting 5s before next movie...")
+        time.sleep(5)
 
 if __name__ == "__main__":
     main()

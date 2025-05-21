@@ -63,7 +63,9 @@ def stream_movie(movie):
         "-i", url,
         "-i", OVERLAY,
         "-filter_complex",
-        f"[0:v]scale=w=854:h=480:force_original_aspect_ratio=decrease,pad=854:480:(ow-iw)/2:(oh-ih)/2[v1];[v1][1:v]overlay=0:0,drawtext=fontfile='{FONT_PATH}':text='{overlay_text}':fontcolor=white:fontsize=18:x=35:y=35",
+        f"[0:v]scale=w=854:h=480:force_original_aspect_ratio=decrease,pad=854:480:(ow-iw)/2:(oh-ih)/2[vscaled];" +
+        f"[vscaled][1:v]overlay=0:0[voverlay];" +
+        f"[voverlay]drawtext=fontfile='{FONT_PATH}':text='{overlay_text}':fontcolor=white:fontsize=18:x=20:y=20",
         "-c:v", "libx264",
         "-preset", "ultrafast",
         "-crf", "24",

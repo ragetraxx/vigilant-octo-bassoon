@@ -9,6 +9,7 @@ RTMP_URL = os.getenv("RTMP_URL")
 OVERLAY = os.path.abspath("overlay.png")
 FONT_PATH = os.path.abspath("Roboto-Black.ttf")
 RETRY_DELAY = 60
+PREBUFFER_SECONDS = 10
 
 # ✅ Sanity Checks
 if not RTMP_URL:
@@ -49,8 +50,10 @@ def stream_movie(movie):
 
     command = [
         "ffmpeg",
-        "-re",  # Stream in real time
-        "-timeout", "5000000",
+        "-ss", f"{PREBUFFER_SECONDS}",  # Start 10 seconds late for buffering
+        "-thread_queue_size", "512",
+        "-fflags", "+genpts+discardcorrupt",
+        "-re",
         "-i", url,
         "-i", OVERLAY,
         "-filter_complex",
@@ -63,21 +66,22 @@ def stream_movie(movie):
         ).format(font=FONT_PATH, text=text),
         "-c:v", "libx264",
         "-preset", "veryfast",
-        "-crf", "23",
         "-tune", "zerolatency",
         "-g", "60",
         "-keyint_min", "60",
         "-sc_threshold", "0",
+        "-crf", "23",
         "-pix_fmt", "yuv420p",
         "-c:a", "aac",
         "-b:a", "128k",
         "-ar", "44100",
+        "-bufsize", "1000k",
+        "-maxrate", "1200k",
         "-f", "flv",
-        "-flvflags", "no_duration_filesize",
         RTMP_URL
     ]
 
-    print(f"🎬 Streaming: {title}")
+    print(f"🎬 Streaming: {title} (with {PREBUFFER_SECONDS}s pre-buffer)")
     try:
         process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
         for line in process.stderr:

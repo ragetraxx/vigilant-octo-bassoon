@@ -10,12 +10,10 @@ OVERLAY = os.path.abspath("overlay.png")
 FONT_PATH = os.path.abspath("Roboto-Black.ttf")
 RETRY_DELAY = 60
 
-# ✅ Check if RTMP_URL is set
 if not RTMP_URL:
     print("❌ ERROR: RTMP_URL environment variable is NOT set!")
     exit(1)
 
-# ✅ Ensure required files exist
 if not os.path.exists(PLAY_FILE):
     print(f"❌ ERROR: {PLAY_FILE} not found!")
     exit(1)
@@ -29,29 +27,25 @@ if not os.path.exists(FONT_PATH):
     exit(1)
 
 def load_movies():
-    """Load all movies from play.json."""
     try:
         with open(PLAY_FILE, "r") as f:
             movies = json.load(f)
         if not movies:
-            print("❌ ERROR: No movies found in play.json!")
+            print("❌ ERROR: No movies in play.json!")
             return []
         return movies
     except (json.JSONDecodeError, IOError) as e:
-        print(f"❌ ERROR: Failed to load {PLAY_FILE} - {str(e)}")
+        print(f"❌ ERROR loading play.json - {str(e)}")
         return []
 
 def escape_drawtext(text):
-    """Escape special characters for FFmpeg drawtext."""
     return text.replace('\\', '\\\\\\\\').replace(':', '\\:').replace("'", "\\'")
 
 def stream_movie(movie):
-    """Stream a single movie using FFmpeg."""
     title = movie.get("title", "Unknown Title")
     url = movie.get("url")
-
     if not url:
-        print(f"❌ ERROR: Missing URL for movie '{title}'")
+        print(f"❌ Missing URL for movie '{title}'")
         return
 
     overlay_text = escape_drawtext(title)
@@ -69,50 +63,46 @@ def stream_movie(movie):
         "-i", url,
         "-i", OVERLAY,
         "-filter_complex",
-        f"[0:v][1:v]scale2ref[v0][v1];[v0][v1]overlay=0:0,drawtext=fontfile='{FONT_PATH}':text='{overlay_text}':fontcolor=white:fontsize=20:x=35:y=35",
+        f"[0:v]scale=w=854:h=480:force_original_aspect_ratio=decrease,pad=854:480:(ow-iw)/2:(oh-ih)/2[v1];[v1][1:v]overlay=0:0,drawtext=fontfile='{FONT_PATH}':text='{overlay_text}':fontcolor=white:fontsize=18:x=35:y=35",
         "-c:v", "libx264",
         "-preset", "ultrafast",
+        "-crf", "24",
         "-tune", "zerolatency",
-        "-g", "50",
-        "-keyint_min", "50",
+        "-g", "60",
+        "-keyint_min", "60",
         "-sc_threshold", "0",
-        "-b:v", "2500k",
-        "-maxrate", "2500k",
-        "-bufsize", "1000k",
         "-pix_fmt", "yuv420p",
         "-vsync", "2",
         "-fps_mode", "auto",
         "-c:a", "aac",
-        "-b:a", "128k",
+        "-b:a", "96k",
         "-ar", "44100",
+        "-movflags", "+faststart",
         "-f", "flv",
         RTMP_URL
     ]
 
-    print(f"🎬 Now Streaming: {title}")
-
+    print(f"🎬 Streaming: {title}")
     try:
         process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
         for line in process.stderr:
-            print(line, end="")  # Optional: view FFmpeg logs
+            print(line, end="")
         process.wait()
     except Exception as e:
-        print(f"❌ ERROR: FFmpeg failed for '{title}' - {str(e)}")
+        print(f"❌ FFmpeg failed: {e}")
 
 def main():
-    """Continuously stream movies from play.json."""
     movies = load_movies()
     if not movies:
-        print(f"🔄 No movies found! Retrying in {RETRY_DELAY} seconds...")
+        print(f"🔄 Retrying in {RETRY_DELAY}s...")
         time.sleep(RETRY_DELAY)
         return main()
 
     index = 0
     while True:
-        movie = movies[index]
-        stream_movie(movie)
+        stream_movie(movies[index])
         index = (index + 1) % len(movies)
-        print("🔄 Movie ended. Playing next movie...")
+        print("🔄 Movie ended. Next one...")
 
 if __name__ == "__main__":
     main()

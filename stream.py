@@ -68,7 +68,7 @@ def stream_movie(movie):
         "-i", OVERLAY,
         "-filter_complex",
         (
-            "[0:v]scale=640:360:force_original_aspect_ratio=decrease,"
+            "[0:v]scale=720:480:force_original_aspect_ratio=decrease,"
             "pad=640:360:(ow-iw)/2:(oh-ih)/2[v];"
             "[1:v]scale=640:360[ol];"
             "[v][ol]overlay=0:0[vo];"
@@ -82,7 +82,7 @@ def stream_movie(movie):
         "-sc_threshold", "0",
         "-b:v", "800k",
         "-bufsize", "1200k",
-        "-maxrate", "1000k",
+        "-maxrate", "5000k",
         "-pix_fmt", "yuv420p",
         "-c:a", "aac",
         "-b:a", "128k",

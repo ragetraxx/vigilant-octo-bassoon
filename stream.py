@@ -68,21 +68,21 @@ def stream_movie(movie):
         "-i", OVERLAY,
         "-filter_complex",
         (
-            "[0:v]scale=720:480:force_original_aspect_ratio=decrease,"
+            "[0:v]scale=720:480:force_original_aspect_ratio=decrease:flags=lanczos,"
             "pad=720:480:(ow-iw)/2:(oh-ih)/2[v];"
-            "[1:v]scale=640:360[ol];"
+            "[1:v]scale=720:480[ol];"
             "[v][ol]overlay=0:0[vo];"
-            "[vo]drawtext=fontfile='{font}':text='{text}':fontcolor=white:fontsize=10:x=20:y=20"
+            "[vo]drawtext=fontfile='{font}':text='{text}':fontcolor=white:fontsize=24:x=20:y=20"
         ).format(font=FONT_PATH, text=text),
         "-c:v", "libx264",
-        "-preset", "veryfast",
+        "-preset", "fast",  # better quality than 'veryfast'
         "-tune", "zerolatency",
         "-g", "60",
         "-keyint_min", "60",
         "-sc_threshold", "0",
-        "-b:v", "3000",
-        "-bufsize", "5000",
+        "-b:v", "3000k",         # increased bitrate for better clarity
         "-maxrate", "5000k",
+        "-bufsize", "5000k",
         "-pix_fmt", "yuv420p",
         "-c:a", "aac",
         "-b:a", "128k",

@@ -69,7 +69,7 @@ def stream_movie(movie):
         "-filter_complex",
         (
             "[0:v]scale=720:480:force_original_aspect_ratio=decrease,"
-            "pad=640:360:(ow-iw)/2:(oh-ih)/2[v];"
+            "pad=720:480:(ow-iw)/2:(oh-ih)/2[v];"
             "[1:v]scale=640:360[ol];"
             "[v][ol]overlay=0:0[vo];"
             "[vo]drawtext=fontfile='{font}':text='{text}':fontcolor=white:fontsize=10:x=20:y=20"

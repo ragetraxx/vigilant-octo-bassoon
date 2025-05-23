@@ -46,9 +46,6 @@ def stream_movie(movie):
         print(f"❌ Missing URL for '{title}'")
         return
 
-    if url.startswith("http"):
-        print(f"⚠️ Streaming from remote URL: {url} — may cause buffering.")
-
     text = escape_drawtext(title)
 
     command = [
@@ -56,15 +53,18 @@ def stream_movie(movie):
         "-re",
         "-i", url,
         "-ss", str(PREBUFFER_SECONDS),
+        "-loop", "1",
         "-i", OVERLAY,
         "-filter_complex",
         (
-            "[0:v]scale=w=640:h=360:force_original_aspect_ratio=decrease:flags=lanczos,"
-            "pad=640:360:(ow-iw)/2:(oh-ih)/2:color=black[v];"
-            "[1:v]scale=640:360[ol];"
-            "[v][ol]overlay=0:0[vo];"
-            "[vo]drawtext=fontfile='{font}':text='{text}':fontcolor=white:fontsize=10:x=25:y=25"
+            "[0:v]scale=640:360:force_original_aspect_ratio=decrease:flags=lanczos,"
+            "pad=640:360:(ow-iw)/2:(oh-ih)/2:color=black[video];"
+            "[1:v]scale=640:360[overlay];"
+            "[video][overlay]overlay=0:0:shortest=1[outv];"
+            "[outv]drawtext=fontfile='{font}':text='{text}':fontcolor=white:fontsize=10:x=25:y=25"
         ).format(font=FONT_PATH, text=text),
+        "-map", "[outv]",
+        "-map", "0:a?",
         "-c:v", "libx264",
         "-preset", "veryfast",
         "-tune", "zerolatency",

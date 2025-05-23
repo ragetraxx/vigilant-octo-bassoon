@@ -59,7 +59,6 @@ def stream_movie(movie):
         "-fflags", "+nobuffer+genpts+discardcorrupt",
         "-flags", "low_delay",
         "-avioflags", "direct",
-        "-use_wallclock_as_timestamps", "1",
         "-probesize", "50M",
         "-analyzeduration", "10M",
         "-rw_timeout", "10000000",
@@ -76,22 +75,25 @@ def stream_movie(movie):
             "pad=w=640:h=360:x=(ow-iw)/2:y=(oh-ih)/2:color=black[v];"
             "[1:v]scale=640:360[ol];"
             "[v][ol]overlay=0:0[vo];"
-            "[vo]drawtext=fontfile='{font}':text='{text}':fontcolor=white:fontsize=10:x=30:y=30"
+            "[vo]drawtext=fontfile='{font}':text='{text}':fontcolor=white:fontsize=15:x=30:y=30"
         ).format(font=FONT_PATH, text=text),
         "-c:v", "libx264",
-        "-preset", "veryfast",
+        "-preset", "ultrafast",
         "-tune", "zerolatency",
+        "-x264-params", "nal-hrd=cbr:force-cfr=1",
         "-g", "60",
         "-keyint_min", "60",
         "-sc_threshold", "0",
         "-b:v", "1000k",
-        "-maxrate", "1200k",
-        "-bufsize", "1200k",
+        "-maxrate", "1000k",
+        "-bufsize", "1000k",
         "-pix_fmt", "yuv420p",
         "-c:a", "aac",
         "-b:a", "128k",
         "-ar", "44100",
         "-flush_packets", "1",
+        "-muxdelay", "0",
+        "-muxpreload", "0",
         "-f", "flv",
         RTMP_URL
     ]

@@ -54,22 +54,13 @@ def stream_movie(movie):
     command = [
         "ffmpeg",
         "-re",
-        "-ss", f"{PREBUFFER_SECONDS}",
-        "-threads", "1",
-        "-fflags", "+nobuffer+genpts+discardcorrupt",
-        "-flags", "low_delay",
-        "-avioflags", "direct",
-        "-probesize", "10M",
-        "-analyzeduration", "5M",
-        "-rw_timeout", "5000000",
-        "-timeout", "5000000",
-        "-thread_queue_size", "256",
         "-i", url,
+        "-ss", str(PREBUFFER_SECONDS),
         "-i", OVERLAY,
         "-filter_complex",
         (
-            "[0:v]scale=w=640:h=360:force_original_aspect_ratio=decrease:flags=bicubic,"
-            "pad=w=640:h=360:x=(ow-iw)/2:y=(oh-ih)/2:color=black[v];"
+            "[0:v]scale=w=640:h=360:force_original_aspect_ratio=decrease:flags=lanczos,"
+            "pad=640:360:(ow-iw)/2:(oh-ih)/2:color=black[v];"
             "[1:v]scale=640:360[ol];"
             "[v][ol]overlay=0:0[vo];"
             "[vo]drawtext=fontfile='{font}':text='{text}':fontcolor=white:fontsize=10:x=25:y=25"
@@ -80,15 +71,14 @@ def stream_movie(movie):
         "-g", "60",
         "-keyint_min", "60",
         "-sc_threshold", "0",
-        "-b:v", "600k",
-        "-maxrate", "800k",
-        "-bufsize", "800k",
+        "-b:v", "500k",
+        "-maxrate", "600k",
+        "-bufsize", "600k",
         "-pix_fmt", "yuv420p",
         "-c:a", "aac",
-        "-b:a", "96k",
+        "-b:a", "64k",
         "-ar", "44100",
         "-ac", "2",
-        "-flush_packets", "1",
         "-f", "flv",
         RTMP_URL
     ]

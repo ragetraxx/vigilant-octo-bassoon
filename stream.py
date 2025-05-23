@@ -61,39 +61,33 @@ def stream_movie(movie):
         "-avioflags", "direct",
         "-probesize", "50M",
         "-analyzeduration", "10M",
-        "-rw_timeout", "10000000",
-        "-timeout", "10000000",
+        "-rw_timeout", "5000000",
+        "-timeout", "5000000",
         "-thread_queue_size", "512",
-        "-reconnect", "1",
-        "-reconnect_streamed", "1",
-        "-reconnect_delay_max", "2",
         "-i", url,
         "-i", OVERLAY,
         "-filter_complex",
         (
-            "[0:v]scale=w=640:h=360:force_original_aspect_ratio=decrease:flags=lanczos,"
-            "pad=w=640:h=360:x=(ow-iw)/2:y=(oh-ih)/2:color=black[v];"
-            "[1:v]scale=640:360[ol];"
+            "[0:v]scale=w=854:h=480:force_original_aspect_ratio=decrease:flags=lanczos,"
+            "pad=w=854:h=480:x=(ow-iw)/2:y=(oh-ih)/2:color=black[v];"
+            "[1:v]scale=854:480[ol];"
             "[v][ol]overlay=0:0[vo];"
             "[vo]drawtext=fontfile='{font}':text='{text}':fontcolor=white:fontsize=15:x=30:y=30"
         ).format(font=FONT_PATH, text=text),
         "-c:v", "libx264",
-        "-preset", "ultrafast",
+        "-preset", "fast",
         "-tune", "zerolatency",
-        "-x264-params", "nal-hrd=cbr:force-cfr=1",
         "-g", "60",
         "-keyint_min", "60",
         "-sc_threshold", "0",
-        "-b:v", "1000k",
-        "-maxrate", "1000k",
-        "-bufsize", "1000k",
+        "-b:v", "3000k",
+        "-maxrate", "5000k",
+        "-bufsize", "5000k",
         "-pix_fmt", "yuv420p",
         "-c:a", "aac",
         "-b:a", "128k",
         "-ar", "44100",
         "-flush_packets", "1",
-        "-muxdelay", "0",
-        "-muxpreload", "0",
         "-f", "flv",
         RTMP_URL
     ]

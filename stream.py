@@ -10,7 +10,7 @@ OVERLAY = os.path.abspath("overlay.png")
 FONT_PATH = os.path.abspath("Roboto-Black.ttf")
 RETRY_DELAY = 60
 PREBUFFER_SECONDS = 10
-MAXRATE_KBPS = 2500  # Fixed maxrate for SD Wi-Fi streaming
+MAXRATE_KBPS = 2000  # Max bitrate
 
 # ✅ Sanity Checks
 if not RTMP_URL:
@@ -67,11 +67,11 @@ def stream_movie(movie):
         "-i", OVERLAY,
         "-filter_complex",
         (
-            "[0:v]scale=w=720:h=480:force_original_aspect_ratio=decrease:flags=bicubic,"
-            "pad=w=720:h=480:x=(ow-iw)/2:y=(oh-ih)/2:color=black[v];"
-            "[1:v]scale=720:480[ol];"
+            "[0:v]scale=w=640:h=360:force_original_aspect_ratio=decrease:flags=bicubic,"
+            "pad=640:360:(ow-iw)/2:(oh-ih)/2:color=black[v];"
+            "[1:v]scale=640:360[ol];"
             "[v][ol]overlay=0:0[vo];"
-            "[vo]drawtext=fontfile='{font}':text='{text}':fontcolor=white:fontsize=16:x=30:y=30"
+            "[vo]drawtext=fontfile='{font}':text='{text}':fontcolor=white:fontsize=10:x=30:y=30"
         ).format(font=FONT_PATH, text=text),
         "-c:v", "libx264",
         "-preset", "fast",
@@ -80,6 +80,7 @@ def stream_movie(movie):
         "-keyint_min", "60",
         "-sc_threshold", "0",
         "-maxrate", f"{MAXRATE_KBPS}k",
+        "-bufsize", f"{MAXRATE_KBPS * 2}k",
         "-pix_fmt", "yuv420p",
         "-c:a", "aac",
         "-b:a", "128k",
@@ -89,7 +90,7 @@ def stream_movie(movie):
         RTMP_URL
     ]
 
-    print(f"🎬 Streaming: {title} (720x480, maxrate: {MAXRATE_KBPS}k)")
+    print(f"🎬 Streaming: {title} (Fitted to 640x360, no stretching, maxrate: {MAXRATE_KBPS}k)")
     try:
         process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
         for line in process.stderr:

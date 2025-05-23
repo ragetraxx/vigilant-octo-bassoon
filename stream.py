@@ -72,7 +72,7 @@ def stream_movie(movie):
             "pad=w=640:h=360:x=(ow-iw)/2:y=(oh-ih)/2:color=black[v];"
             "[1:v]scale=640:360[ol];"
             "[v][ol]overlay=0:0[vo];"
-            "[vo]drawtext=fontfile='{font}':text='{text}':fontcolor=white:fontsize=14:x=20:y=20"
+            "[vo]drawtext=fontfile='{font}':text='{text}':fontcolor=white:fontsize=10:x=25:y=25"
         ).format(font=FONT_PATH, text=text),
         "-c:v", "libx264",
         "-preset", "veryfast",

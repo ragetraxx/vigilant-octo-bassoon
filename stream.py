@@ -46,15 +46,10 @@ def build_ffmpeg_command(url, title):
     return [
         "ffmpeg",
         "-re",
-        "-fflags", "+genpts+nobuffer",  # ✅ Low latency + proper PTS
+        "-fflags", "+nobuffer",
         "-flags", "low_delay",
         "-threads", "1",
-        "-rtbufsize", "150M",           # ✅ Network caching buffer
-        "-probesize", "50M",            # ✅ Larger probe size
-        "-analyzeduration", "10M",      # ✅ More analysis for stable playback
-        "-rw_timeout", "15000000",      # ✅ Read timeout (15s)
-        "-read_ahead_limit", "10M",     # ✅ Player-style caching (read ahead)
-        "-ss", str(PREBUFFER_SECONDS),  # ✅ Initial prebuffer for quick start
+        "-ss", str(PREBUFFER_SECONDS),
         *input_options,
         "-i", url,
         "-i", OVERLAY,

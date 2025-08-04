@@ -9,7 +9,6 @@ RTMP_URL = os.getenv("RTMP_URL")
 OVERLAY = os.path.abspath("overlay.png")
 FONT_PATH = os.path.abspath("Roboto-Black.ttf")
 RETRY_DELAY = 60
-PREBUFFER_SECONDS = 5  # Reduced prebuffer for quicker start
 
 # ✅ Sanity Checks
 if not RTMP_URL:
@@ -35,6 +34,7 @@ def escape_drawtext(text):
 def build_ffmpeg_command(url, title):
     text = escape_drawtext(title)
 
+    # ✅ Input headers for streaming sources
     input_options = []
     if ".m3u8" in url or "streamsvr" in url:
         print(f"🔐 Spoofing headers for {url}")
@@ -46,10 +46,14 @@ def build_ffmpeg_command(url, title):
     return [
         "ffmpeg",
         "-re",
-        "-fflags", "+nobuffer",
+        "-fflags", "+genpts+nobuffer",
         "-flags", "low_delay",
         "-threads", "1",
-        "-ss", str(PREBUFFER_SECONDS),
+        "-rtbufsize", "150M",          # ✅ Network caching buffer
+        "-probesize", "50M",           # ✅ Analyze more data upfront
+        "-analyzeduration", "10M",
+        "-rw_timeout", "15000000",     # ✅ Read timeout (15s)
+        "-read_ahead_limit", "10M",    # ✅ Player-like caching
         *input_options,
         "-i", url,
         "-i", OVERLAY,

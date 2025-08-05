@@ -60,10 +60,10 @@ def build_ffmpeg_command(url, title):
         "-i", url,
         "-i", OVERLAY,
         "-filter_complex",
-        f"[0:v]scale=1280:720:flags=lanczos,unsharp=7:7:1.0:7:7:0.0[v];"
-        f"[1:v]scale=1280:720[ol];"
+        f"[0:v]scale=1024:576:flags=lanczos,unsharp=5:5:0.7:5:5:0.0[v];"
+        f"[1:v]scale=1024:576[ol];"
         f"[v][ol]overlay=0:0[vo];"
-        f"[vo]drawtext=fontfile='{FONT_PATH}':text='{text}':fontcolor=white:fontsize=20:x=30:y=30",
+        f"[vo]drawtext=fontfile='{FONT_PATH}':text='{text}':fontcolor=white:fontsize=18:x=35:y=35",
         "-r", "29.97",
         "-c:v", video_codec,
         "-profile:v", profile,
@@ -73,7 +73,7 @@ def build_ffmpeg_command(url, title):
         "-g", "60",
         "-keyint_min", "60",
         "-sc_threshold", "0",
-        "-b:v", "1300k",
+        "-b:v", "1200k",      # ✅ Optimized bitrate for 1024x576
         "-maxrate", "1400k",
         "-bufsize", "1400k",
         "-pix_fmt", "yuv420p",

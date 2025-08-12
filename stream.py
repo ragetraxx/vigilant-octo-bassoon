@@ -33,13 +33,24 @@ def escape_drawtext(text):
 
 def build_ffmpeg_command(url, title):
     text = escape_drawtext(title)
-
     input_options = []
-    if ".m3u8" in url or "streamsvr" in url:
-        print(f"🔐 Spoofing headers for {url}")
+
+    # ✅ Auto header spoof for pkaystream / streamsvr URLs
+    if "pkaystream.cc" in url or "streamsvr" in url:
+        print(f"🔐 Using spoofed headers for {url}")
         input_options = [
-            "-user_agent", "Mozilla/5.0",
-            "-headers", "Referer: https://hollymoviehd.cc\r\n"
+            "-user_agent", (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/127.0.0.0 Safari/537.36"
+            ),
+            "-headers", (
+                "Referer: https://pkaystream.cc/\r\n"
+                "Origin: https://pkaystream.cc\r\n"
+                "Accept-Language: en-US,en;q=0.9\r\n"
+                # If cookies are needed, uncomment below and paste them:
+                # "Cookie: YOUR_COOKIE_HERE\r\n"
+            )
         ]
 
     return [

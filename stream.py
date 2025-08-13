@@ -9,6 +9,7 @@ RTMP_URL = os.getenv("RTMP_URL")
 OVERLAY = os.path.abspath("overlay.png")
 FONT_PATH = os.path.abspath("Roboto-Black.ttf")
 RETRY_DELAY = 60
+PREBUFFER_SECONDS = 5
 
 # ✅ Sanity Checks
 if not RTMP_URL:
@@ -33,52 +34,50 @@ def escape_drawtext(text):
 
 def build_ffmpeg_command(url, title):
     text = escape_drawtext(title)
+
     input_options = []
+    is_hls = url.endswith(".m3u8") or "streamsvr" in url
 
-    # ✅ Header spoof for pkaystream / streamsvr MP4s
-    if "pkaystream.cc" in url or "streamsvr" in url:
-        print(f"🔐 Using spoofed headers for {url}")
+    if is_hls:
+        print(f"🔐 Spoofing headers for HLS: {url}")
         input_options = [
-            "-user_agent", (
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/127.0.0.0 Safari/537.36"
-            ),
-            "-headers", (
-                "Referer: https://hollymoviehd.cc\r\n"
-                "Origin: https://hollymoviehd.cc\r\n"
-                "Accept-Language: en-US,en;q=0.9\r\n"
-            )
+            "-user_agent", "Mozilla/5.0",
+            "-headers", "Referer: https://hollymoviehd.cc\r\n",
+            "-protocol_whitelist", "file,http,https,tcp,tls,crypto"
         ]
-
-    # ✅ MP4-safe timestamp handling
-    input_options += ["-fflags", "+genpts"]
+    else:
+        print(f"📦 MP4 detected: {url}")
+        input_options = ["-fflags", "+genpts", "-ss", str(PREBUFFER_SECONDS)]
 
     return [
         "ffmpeg",
-        "-re",  # real-time pacing
+        "-re",
+        "-fflags", "+nobuffer",
+        "-flags", "low_delay",
+        "-threads", "1",
         *input_options,
         "-i", url,
         "-i", OVERLAY,
         "-filter_complex",
-        f"[0:v]scale=1024:576:flags=lanczos,format=yuv420p[v];"
+        f"[0:v]scale=1024:576:flags=lanczos,unsharp=5:5:0.8:5:5:0.0[v];"
         f"[1:v]scale=1024:576[ol];"
         f"[v][ol]overlay=0:0[vo];"
         f"[vo]drawtext=fontfile='{FONT_PATH}':text='{text}':fontcolor=white:fontsize=15:x=35:y=35",
-        "-r", "30",
+        "-r", "29.97003",
         "-c:v", "libx264",
         "-profile:v", "high",
-        "-level", "4.0",
-        "-preset", "veryfast",
+        "-level:v", "3.2",
+        "-preset", "ultrafast",
         "-tune", "zerolatency",
         "-g", "60",
         "-keyint_min", "60",
         "-sc_threshold", "0",
-        "-b:v", "1500k",
-        "-maxrate", "2000k",
-        "-bufsize", "3000k",
+        "-b:v", "1000k",
+        "-maxrate", "1300k",
+        "-bufsize", "1300k",
         "-pix_fmt", "yuv420p",
         "-c:a", "aac",
+        "-profile:a", "aac_low",
         "-b:a", "128k",
         "-ar", "48000",
         "-ac", "2",
@@ -94,7 +93,7 @@ def stream_movie(movie):
         print(f"❌ Skipping '{title}': no URL")
         return
 
-    print(f"🎬 Streaming MP4: {title}")
+    print(f"🎬 Streaming: {title}")
     command = build_ffmpeg_command(url, title)
 
     try:
@@ -104,6 +103,8 @@ def stream_movie(movie):
                 print(f"🚫 403 Forbidden! Skipping: {title}")
                 process.kill()
                 return
+            if "Invalid data found" in line:
+                print(f"⚠️ Invalid data for: {title}")
             print(line.strip())
         process.wait()
     except Exception as e:
@@ -120,7 +121,7 @@ def main():
     while True:
         stream_movie(movies[index])
         index = (index + 1) % len(movies)
-        print("⏭️  Next MP4 in 5s...")
+        print("⏭️  Next movie in 5s...")
         time.sleep(5)
 
 if __name__ == "__main__":

@@ -36,18 +36,12 @@ def build_ffmpeg_command(url, title):
     text = escape_drawtext(title)
 
     input_options = []
-    is_hls = url.endswith(".m3u8") or "streamsvr" in url
-
-    if is_hls:
-        print(f"🔐 Spoofing headers for HLS: {url}")
+    if ".m3u8" in url or "streamsvr" in url:
+        print(f"🔐 Spoofing headers for {url}")
         input_options = [
             "-user_agent", "Mozilla/5.0",
-            "-headers", "Referer: https://hollymoviehd.cc\r\n",
-            "-protocol_whitelist", "file,http,https,tcp,tls,crypto"
+            "-headers", "Referer: https://hollymoviehd.cc\r\n"
         ]
-    else:
-        print(f"📦 MP4 detected: {url}")
-        input_options = ["-fflags", "+genpts", "-ss", str(PREBUFFER_SECONDS)]
 
     return [
         "ffmpeg",
@@ -55,6 +49,7 @@ def build_ffmpeg_command(url, title):
         "-fflags", "+nobuffer",
         "-flags", "low_delay",
         "-threads", "1",
+        "-ss", str(PREBUFFER_SECONDS),
         *input_options,
         "-i", url,
         "-i", OVERLAY,
@@ -103,8 +98,6 @@ def stream_movie(movie):
                 print(f"🚫 403 Forbidden! Skipping: {title}")
                 process.kill()
                 return
-            if "Invalid data found" in line:
-                print(f"⚠️ Invalid data for: {title}")
             print(line.strip())
         process.wait()
     except Exception as e:

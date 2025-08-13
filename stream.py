@@ -45,8 +45,8 @@ def build_ffmpeg_command(url, title):
                 "Chrome/127.0.0.0 Safari/537.36"
             ),
             "-headers", (
-                "Referer: https://pkaystream.cc/\r\n"
-                "Origin: https://pkaystream.cc\r\n"
+                "Referer: https://hollymoviehd.cc\r\n"
+                "Origin: https://hollymoviehd.cc\r\n"
                 "Accept-Language: en-US,en;q=0.9\r\n"
                 # If cookies are needed, uncomment below and paste them:
                 # "Cookie: YOUR_COOKIE_HERE\r\n"

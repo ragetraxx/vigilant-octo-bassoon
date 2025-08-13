@@ -35,7 +35,7 @@ def build_ffmpeg_command(url, title):
     text = escape_drawtext(title)
     input_options = []
 
-    # ✅ Auto header spoof for pkaystream / streamsvr URLs
+    # ✅ Header spoof for pkaystream / streamsvr MP4s
     if "pkaystream.cc" in url or "streamsvr" in url:
         print(f"🔐 Using spoofed headers for {url}")
         input_options = [
@@ -48,17 +48,15 @@ def build_ffmpeg_command(url, title):
                 "Referer: https://hollymoviehd.cc\r\n"
                 "Origin: https://hollymoviehd.cc\r\n"
                 "Accept-Language: en-US,en;q=0.9\r\n"
-                # If cookies are needed, uncomment below and paste them:
-                # "Cookie: YOUR_COOKIE_HERE\r\n"
             )
         ]
 
+    # ✅ MP4-safe timestamp handling
+    input_options += ["-fflags", "+genpts"]
+
     return [
         "ffmpeg",
-        "-re",
-        "-fflags", "+discardcorrupt",
-        "-flags", "low_delay",
-        "-threads", "1",
+        "-re",  # real-time pacing
         *input_options,
         "-i", url,
         "-i", OVERLAY,
@@ -96,7 +94,7 @@ def stream_movie(movie):
         print(f"❌ Skipping '{title}': no URL")
         return
 
-    print(f"🎬 Streaming: {title}")
+    print(f"🎬 Streaming MP4: {title}")
     command = build_ffmpeg_command(url, title)
 
     try:
@@ -122,7 +120,7 @@ def main():
     while True:
         stream_movie(movies[index])
         index = (index + 1) % len(movies)
-        print("⏭️  Next movie in 5s...")
+        print("⏭️  Next MP4 in 5s...")
         time.sleep(5)
 
 if __name__ == "__main__":

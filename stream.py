@@ -9,6 +9,7 @@ RTMP_URL = os.getenv("RTMP_URL")
 OVERLAY = os.path.abspath("overlay.png")
 FONT_PATH = os.path.abspath("Roboto-Black.ttf")
 RETRY_DELAY = 60
+PREBUFFER_SECONDS = 5
 
 # ✅ Sanity Checks
 if not RTMP_URL:
@@ -34,41 +35,39 @@ def escape_drawtext(text):
 def build_ffmpeg_command(url, title):
     text = escape_drawtext(title)
 
+    # NASA+ headers
     input_options = [
         "-user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-        "-headers", "Referer: https://www.google.com/\r\nOrigin: https://www.google.com\r\n"
+        "-headers", "Referer: https://plus.nasa.gov/\r\nOrigin: https://plus.nasa.gov\r\n"
     ]
 
     return [
         "ffmpeg",
-        "-fflags", "+genpts+discardcorrupt+nobuffer",  # regenerate PTS, drop broken packets, no read buffer
+        "-re",
+        "-fflags", "+nobuffer",
         "-flags", "low_delay",
-        "-thread_queue_size", "1024",
-        "-threads", "4",
-        "-use_wallclock_as_timestamps", "1",          # real-time ordering
-        "-probesize", "32",                           # minimal probe
-        "-analyzeduration", "0",                      # no deep analysis
-        "-rtbufsize", "2M",                           # slightly bigger to absorb jitter
+        "-threads", "1",
+        "-ss", str(PREBUFFER_SECONDS),
         *input_options,
         "-i", url,
         "-i", OVERLAY,
         "-filter_complex",
-        f"[0:v]scale=1920:1080:flags=lanczos,unsharp=7:7:1.0:7:7:0.0[v];"
-        f"[1:v]scale=1920:1080[ol];"
+        f"[0:v]scale=1280:720:flags=lanczos,unsharp=5:5:0.8:5:5:0.0[v];"
+        f"[1:v]scale=1280:720[ol];"
         f"[v][ol]overlay=0:0[vo];"
-        f"[vo]drawtext=fontfile='{FONT_PATH}':text='{text}':fontcolor=white:fontsize=30:x=40:y=40",
-        "-r", "30",
+        f"[vo]drawtext=fontfile='{FONT_PATH}':text='{text}':fontcolor=white:fontsize=18:x=35:y=35",
+        "-r", "29.97003",
         "-c:v", "libx264",
         "-profile:v", "high",
-        "-level:v", "4.0",
+        "-level:v", "3.2",
         "-preset", "ultrafast",
         "-tune", "zerolatency",
-        "-g", "30",               # keyframe every second
-        "-keyint_min", "30",
+        "-g", "60",
+        "-keyint_min", "60",
         "-sc_threshold", "0",
-        "-b:v", "3500k",
-        "-maxrate", "4000k",
-        "-bufsize", "4000k",       # slightly larger for stability
+        "-b:v", "1500k",
+        "-maxrate", "2000k",
+        "-bufsize", "2000k",
         "-pix_fmt", "yuv420p",
         "-c:a", "aac",
         "-profile:a", "aac_low",

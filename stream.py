@@ -41,14 +41,14 @@ def build_ffmpeg_command(url, title):
 
     return [
         "ffmpeg",
-        "-fflags", "nobuffer",
+        "-fflags", "+genpts+discardcorrupt+nobuffer",  # regenerate PTS, drop broken packets, no read buffer
         "-flags", "low_delay",
         "-thread_queue_size", "1024",
         "-threads", "4",
-        "-use_wallclock_as_timestamps", "1",
-        "-probesize", "32",              # Minimal probing for faster start
-        "-analyzeduration", "0",         # No long stream analysis
-        "-rtbufsize", "512k",             # Small read buffer for less delay
+        "-use_wallclock_as_timestamps", "1",          # real-time ordering
+        "-probesize", "32",                           # minimal probe
+        "-analyzeduration", "0",                      # no deep analysis
+        "-rtbufsize", "2M",                           # slightly bigger to absorb jitter
         *input_options,
         "-i", url,
         "-i", OVERLAY,
@@ -61,14 +61,14 @@ def build_ffmpeg_command(url, title):
         "-c:v", "libx264",
         "-profile:v", "high",
         "-level:v", "4.0",
-        "-preset", "ultrafast",           # Faster encoding for less delay
+        "-preset", "ultrafast",
         "-tune", "zerolatency",
-        "-g", "30",                       # Short GOP for quicker recovery
+        "-g", "30",               # keyframe every second
         "-keyint_min", "30",
         "-sc_threshold", "0",
-        "-b:v", "3500k",                  # Slightly lower bitrate for stability
+        "-b:v", "3500k",
         "-maxrate", "4000k",
-        "-bufsize", "2000k",               # Small buffer for minimal delay
+        "-bufsize", "4000k",       # slightly larger for stability
         "-pix_fmt", "yuv420p",
         "-c:a", "aac",
         "-profile:a", "aac_low",

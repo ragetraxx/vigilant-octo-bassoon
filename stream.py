@@ -38,7 +38,7 @@ def build_ffmpeg_command(url, title):
     # NASA+ headers
     input_options = [
         "-user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-        "-headers", "Referer: https://nmovies.cc/\r\nOrigin: https://nmovies.cc\r\n"
+        "-headers", "Referer: https://pkaystream.cc/embed/\r\nOrigin: https://pkaystream.cc/\r\n"
     ]
 
     return [

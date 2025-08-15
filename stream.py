@@ -9,7 +9,6 @@ RTMP_URL = os.getenv("RTMP_URL")
 OVERLAY = os.path.abspath("overlay.png")
 FONT_PATH = os.path.abspath("Roboto-Black.ttf")
 RETRY_DELAY = 60
-PREBUFFER_SECONDS = 5
 
 # ✅ Sanity Checks
 if not RTMP_URL:
@@ -35,7 +34,6 @@ def escape_drawtext(text):
 def build_ffmpeg_command(url, title):
     text = escape_drawtext(title)
 
-    # NASA+ headers
     input_options = [
         "-user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
         "-headers", "Referer: https://www.google.com/\r\nOrigin: https://www.google.com\r\n"
@@ -45,9 +43,12 @@ def build_ffmpeg_command(url, title):
         "ffmpeg",
         "-fflags", "nobuffer",
         "-flags", "low_delay",
-        "-thread_queue_size", "512",
-        "-threads", "4",  # Use more threads for faster processing
-        "-ss", str(PREBUFFER_SECONDS),
+        "-thread_queue_size", "1024",
+        "-threads", "4",
+        "-use_wallclock_as_timestamps", "1",
+        "-probesize", "32",              # Minimal probing for faster start
+        "-analyzeduration", "0",         # No long stream analysis
+        "-rtbufsize", "512k",             # Small read buffer for less delay
         *input_options,
         "-i", url,
         "-i", OVERLAY,
@@ -60,18 +61,18 @@ def build_ffmpeg_command(url, title):
         "-c:v", "libx264",
         "-profile:v", "high",
         "-level:v", "4.0",
-        "-preset", "veryfast",  # Better quality than ultrafast but still low latency
+        "-preset", "ultrafast",           # Faster encoding for less delay
         "-tune", "zerolatency",
-        "-g", "60",
-        "-keyint_min", "60",
+        "-g", "30",                       # Short GOP for quicker recovery
+        "-keyint_min", "30",
         "-sc_threshold", "0",
-        "-b:v", "4500k",        # Higher bitrate for sharper image
-        "-maxrate", "5000k",
-        "-bufsize", "10000k",   # Bigger buffer for smoother playback
+        "-b:v", "3500k",                  # Slightly lower bitrate for stability
+        "-maxrate", "4000k",
+        "-bufsize", "2000k",               # Small buffer for minimal delay
         "-pix_fmt", "yuv420p",
         "-c:a", "aac",
         "-profile:a", "aac_low",
-        "-b:a", "160k",         # Slightly higher audio bitrate
+        "-b:a", "128k",
         "-ar", "48000",
         "-ac", "2",
         "-f", "flv",

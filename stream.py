@@ -43,35 +43,35 @@ def build_ffmpeg_command(url, title):
 
     return [
         "ffmpeg",
-        "-re",
-        "-fflags", "+nobuffer",
+        "-fflags", "nobuffer",
         "-flags", "low_delay",
-        "-threads", "1",
+        "-thread_queue_size", "512",
+        "-threads", "4",  # Use more threads for faster processing
         "-ss", str(PREBUFFER_SECONDS),
         *input_options,
         "-i", url,
         "-i", OVERLAY,
         "-filter_complex",
-        f"[0:v]scale=1920:1080:flags=lanczos,unsharp=5:5:0.8:5:5:0.0[v];"
+        f"[0:v]scale=1920:1080:flags=lanczos,unsharp=7:7:1.0:7:7:0.0[v];"
         f"[1:v]scale=1920:1080[ol];"
         f"[v][ol]overlay=0:0[vo];"
         f"[vo]drawtext=fontfile='{FONT_PATH}':text='{text}':fontcolor=white:fontsize=30:x=40:y=40",
-        "-r", "29.97003",
+        "-r", "30",
         "-c:v", "libx264",
         "-profile:v", "high",
-        "-level:v", "3.2",
-        "-preset", "ultrafast",
+        "-level:v", "4.0",
+        "-preset", "veryfast",  # Better quality than ultrafast but still low latency
         "-tune", "zerolatency",
         "-g", "60",
         "-keyint_min", "60",
         "-sc_threshold", "0",
-        "-b:v", "2800k",
-        "-maxrate", "3000k",
-        "-bufsize", "3000k",
+        "-b:v", "4500k",        # Higher bitrate for sharper image
+        "-maxrate", "5000k",
+        "-bufsize", "10000k",   # Bigger buffer for smoother playback
         "-pix_fmt", "yuv420p",
         "-c:a", "aac",
         "-profile:a", "aac_low",
-        "-b:a", "128k",
+        "-b:a", "160k",         # Slightly higher audio bitrate
         "-ar", "48000",
         "-ac", "2",
         "-f", "flv",

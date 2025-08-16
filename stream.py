@@ -2,11 +2,12 @@ import os
 import json
 import subprocess
 import time
+import requests
 
 # ✅ Configuration
 PLAY_FILE = "play.json"
 RTMP_URL = os.getenv("RTMP_URL")
-OVERLAY = os.path.abspath("overlay.png")
+OVERLAY = os.path.abspath("overlay.png")   # always present
 FONT_PATH = os.path.abspath("Roboto-Black.ttf")
 RETRY_DELAY = 60
 PREBUFFER_SECONDS = 5
@@ -32,14 +33,48 @@ def load_movies():
 def escape_drawtext(text):
     return text.replace('\\', '\\\\\\\\').replace(':', '\\:').replace("'", "\\'")
 
-def build_ffmpeg_command(url, title):
+def download_logo(url, filename="current_logo.png"):
+    """Download logo for the current movie."""
+    try:
+        r = requests.get(url, timeout=10)
+        if r.status_code == 200:
+            with open(filename, "wb") as f:
+                f.write(r.content)
+            return filename
+    except Exception as e:
+        print(f"⚠️ Failed to download logo: {e}")
+    return None
+
+def build_ffmpeg_command(url, title, logo_file):
     text = escape_drawtext(title)
 
-    # NASA+ headers
+    # NASA+ headers (if used)
     input_options = [
         "-user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
         "-headers", "Referer: https://plus.nasa.gov/\r\nOrigin: https://plus.nasa.gov\r\n"
     ]
+
+    # ✅ Case 1: Logo exists → overlay.png + logo (no title)
+    if logo_file:
+        filter_complex = (
+            f"[0:v]scale=1280:720:flags=lanczos,unsharp=5:5:0.8:5:5:0.0[v];"
+            f"[1:v]scale=1280:720[ol];"
+            f"[v][ol]overlay=0:0[tmp];"
+            f"[2:v]scale=100:-1[logo];"
+            f"[tmp][logo]overlay=10:10[vo]"
+        )
+        inputs = ["-i", url, "-i", OVERLAY, "-i", logo_file]
+
+    # ✅ Case 2: No logo → overlay.png + title
+    else:
+        filter_complex = (
+            f"[0:v]scale=1280:720:flags=lanczos,unsharp=5:5:0.8:5:5:0.0[v];"
+            f"[1:v]scale=1280:720[ol];"
+            f"[v][ol]overlay=0:0[vo];"
+            f"[vo]drawtext=fontfile='{FONT_PATH}':text='{text}':"
+            f"fontcolor=white:fontsize=25:x=35:y=35"
+        )
+        inputs = ["-i", url, "-i", OVERLAY]
 
     return [
         "ffmpeg",
@@ -49,13 +84,8 @@ def build_ffmpeg_command(url, title):
         "-threads", "1",
         "-ss", str(PREBUFFER_SECONDS),
         *input_options,
-        "-i", url,
-        "-i", OVERLAY,
-        "-filter_complex",
-        f"[0:v]scale=1280:720:flags=lanczos,unsharp=5:5:0.8:5:5:0.0[v];"
-        f"[1:v]scale=1280:720[ol];"
-        f"[v][ol]overlay=0:0[vo];"
-        f"[vo]drawtext=fontfile='{FONT_PATH}':text='{text}':fontcolor=white:fontsize=25:x=35:y=35",
+        *inputs,
+        "-filter_complex", filter_complex,
         "-r", "29.97003",
         "-c:v", "libx264",
         "-profile:v", "high",
@@ -81,13 +111,19 @@ def build_ffmpeg_command(url, title):
 def stream_movie(movie):
     title = movie.get("title", "Untitled")
     url = movie.get("url")
+    logo_url = movie.get("logo")
 
     if not url:
         print(f"❌ Skipping '{title}': no URL")
         return
 
     print(f"🎬 Streaming: {title}")
-    command = build_ffmpeg_command(url, title)
+
+    logo_file = None
+    if logo_url:
+        logo_file = download_logo(logo_url)
+
+    command = build_ffmpeg_command(url, title, logo_file)
 
     try:
         process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)

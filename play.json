@@ -1,22 +1,27 @@
 [
     {
-        "title": "Black Mass",
-        "url": "http://103.236.179.86:80/movie/rictms/rictms/6020.mp4"
+        "title": "Battle: Los Angeles",
+        "url": "http://103.236.179.86:80/movie/rictms/rictms/5069.mp4",
+        "logo": "https://image.tmdb.org/t/p/w500/k7jbwgYQNoXHAmagQTkmRYHBbXN.png"
     },
     {
-        "title": "Army of Dead",
-        "url": "http://103.236.179.86:80/movie/rictms/rictms/13410.mp4"
+        "title": "Bad Lieutenant: Port of Call New Orleans",
+        "url": "http://103.236.179.86:80/movie/rictms/rictms/13187.mp4",
+        "logo": "https://image.tmdb.org/t/p/w500/uroOzabmMVQgBEiiTi4Oi6hcoGr.png"
     },
     {
-        "title": "Army of Thieves",
-        "url": "http://103.236.179.86:80/movie/rictms/rictms/6151.mp4"
+        "title": "Believer",
+        "url": "http://103.236.179.86:80/movie/rictms/rictms/4358.mkv",
+        "logo": ""
     },
     {
-        "title": "Blade II",
-        "url": "http://103.236.179.86:80/movie/rictms/rictms/14871.mp4"
+        "title": "American Ultra",
+        "url": "http://103.236.179.86:80/movie/rictms/rictms/4990.mp4",
+        "logo": "https://image.tmdb.org/t/p/w500/7Y9sYru5cPhC74f9VYp7hvuad10.png"
     },
     {
-        "title": "2 Fast 2 Furious",
-        "url": "http://103.236.179.86:80/movie/rictms/rictms/449.mp4"
+        "title": "A Taxi Driver",
+        "url": "http://103.236.179.86:80/movie/rictms/rictms/15248.mkv",
+        "logo": "https://image.tmdb.org/t/p/w500/yenD4wHxejGgH7AN1hPpvAw0B1k.png"
     }
 ]

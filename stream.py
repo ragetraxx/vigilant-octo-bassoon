@@ -35,11 +35,15 @@ def escape_drawtext(text):
 def build_ffmpeg_command(url, title):
     text = escape_drawtext(title)
 
-    # NASA+ headers
-    input_options = [
-        "-user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-        "-headers", "Referer: https://plus.nasa.gov/\r\nOrigin: https://plus.nasa.gov\r\n"
-    ]
+    # 🔑 Burn subtitles if present inside the video (e.g., MKV/MP4)
+    filter_complex = (
+        f"[0:v]scale=1280:720:flags=lanczos,subtitles='{url}'"
+        f",unsharp=5:5:0.8:5:5:0.0[v];"
+        f"[1:v]scale=1280:720[ol];"
+        f"[v][ol]overlay=0:0[vo];"
+        f"[vo]drawtext=fontfile='{FONT_PATH}':text='{text}':"
+        f"fontcolor=white:fontsize=30:x=35:y=35"
+    )
 
     return [
         "ffmpeg",
@@ -48,14 +52,9 @@ def build_ffmpeg_command(url, title):
         "-flags", "low_delay",
         "-threads", "1",
         "-ss", str(PREBUFFER_SECONDS),
-        *input_options,
         "-i", url,
         "-i", OVERLAY,
-        "-filter_complex",
-        f"[0:v]scale=1280:720:flags=lanczos,unsharp=5:5:0.8:5:5:0.0[v];"
-        f"[1:v]scale=1280:720[ol];"
-        f"[v][ol]overlay=0:0[vo];"
-        f"[vo]drawtext=fontfile='{FONT_PATH}':text='{text}':fontcolor=white:fontsize=18:x=35:y=35",
+        "-filter_complex", filter_complex,
         "-r", "29.97003",
         "-c:v", "libx264",
         "-profile:v", "high",

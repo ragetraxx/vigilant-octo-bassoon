@@ -2,7 +2,6 @@ import os
 import json
 import subprocess
 import time
-import urllib.request
 
 # ✅ Configuration
 PLAY_FILE = "play.json"
@@ -12,49 +11,37 @@ FONT_PATH = os.path.abspath("Roboto-Black.ttf")
 RETRY_DELAY = 60
 PREBUFFER_SECONDS = 5
 
+# ✅ Sanity Checks
+if not RTMP_URL:
+    print("❌ ERROR: RTMP_URL is not set!")
+    exit(1)
 
-# ✅ Escape text for drawtext
-def escape_drawtext(text):
-    if not text:
-        return ""
-    return text.replace(":", r"\:").replace("'", r"\'")
+for path, name in [(PLAY_FILE, "Playlist JSON"), (OVERLAY, "Overlay Image"), (FONT_PATH, "Font File")]:
+    if not os.path.exists(path):
+        print(f"❌ ERROR: {name} '{path}' not found!")
+        exit(1)
 
-
-# ✅ Download logo if URL exists
-def download_logo(url, filename="current_logo.png"):
+def load_movies():
     try:
-        urllib.request.urlretrieve(url, filename)
-        return filename
+        with open(PLAY_FILE, "r") as f:
+            return json.load(f) or []
     except Exception as e:
-        print(f"⚠️ Failed to download logo: {e}")
-        return None
+        print(f"❌ Failed to load {PLAY_FILE}: {e}")
+        return []
 
+def escape_drawtext(text):
+    return text.replace('\\', '\\\\\\\\').replace(':', '\\:').replace("'", "\\'")
 
-# ✅ Build FFmpeg command with overlay + logo/title
-def build_ffmpeg_command(url, title, logo_file):
+def build_ffmpeg_command(url, title):
     text = escape_drawtext(title)
 
-    # ✅ Case 1: Logo exists → overlay.png + logo (no title)
-    if logo_file:
-        filter_complex = (
-            f"[0:v]scale=1280:720:flags=lanczos,format=yuv420p[v];"
-            f"[1:v]scale=1280:720,format=rgba[ol];"
-            f"[2:v]scale=-1:80,format=rgba[logo];"  # limit height to 80px
-            f"[v][ol]overlay=0:0[tmp];"
-            f"[tmp][logo]overlay=10:10[vo]"
-        )
-        inputs = ["-i", url, "-i", OVERLAY, "-i", logo_file]
-
-    # ✅ Case 2: No logo → overlay.png + title
-    else:
-        filter_complex = (
-            f"[0:v]scale=1280:720:flags=lanczos,format=yuv420p[v];"
-            f"[1:v]scale=1280:720,format=rgba[ol];"
-            f"[v][ol]overlay=0:0[vo];"
-            f"[vo]drawtext=fontfile='{FONT_PATH}':text='{text}':"
-            f"fontcolor=white:fontsize=25:x=35:y=35"
-        )
-        inputs = ["-i", url, "-i", OVERLAY]
+    input_options = []
+    if ".m3u8" in url or "streamsvr" in url:
+        print(f"🔐 Spoofing headers for {url}")
+        input_options = [
+            "-user_agent", "Mozilla/5.0",
+            "-headers", "Referer: https://hollymoviehd.cc\r\n"
+        ]
 
     return [
         "ffmpeg",
@@ -63,8 +50,14 @@ def build_ffmpeg_command(url, title, logo_file):
         "-flags", "low_delay",
         "-threads", "1",
         "-ss", str(PREBUFFER_SECONDS),
-        *inputs,
-        "-filter_complex", filter_complex,
+        *input_options,
+        "-i", url,
+        "-i", OVERLAY,
+        "-filter_complex",
+        f"[0:v]scale=1280:720:flags=lanczos,unsharp=5:5:0.8:5:5:0.0[v];"
+        f"[1:v]scale=1280:720[ol];"
+        f"[v][ol]overlay=0:0[vo];"
+        f"[vo]drawtext=fontfile='{FONT_PATH}':text='{text}':fontcolor=white:fontsize=25:x=35:y=35",
         "-r", "29.97003",
         "-c:v", "libx264",
         "-profile:v", "high",
@@ -84,46 +77,45 @@ def build_ffmpeg_command(url, title, logo_file):
         "-ar", "48000",
         "-ac", "2",
         "-f", "flv",
-        RTMP_URL,
+        RTMP_URL
     ]
 
+def stream_movie(movie):
+    title = movie.get("title", "Untitled")
+    url = movie.get("url")
 
-# ✅ Play stream list
-def play_streams():
-    if not os.path.exists(PLAY_FILE):
-        print(f"❌ {PLAY_FILE} not found")
+    if not url:
+        print(f"❌ Skipping '{title}': no URL")
         return
 
-    with open(PLAY_FILE, "r", encoding="utf-8") as f:
-        movies = json.load(f)
+    print(f"🎬 Streaming: {title}")
+    command = build_ffmpeg_command(url, title)
 
+    try:
+        process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+        for line in process.stderr:
+            if "403 Forbidden" in line:
+                print(f"🚫 403 Forbidden! Skipping: {title}")
+                process.kill()
+                return
+            print(line.strip())
+        process.wait()
+    except Exception as e:
+        print(f"❌ FFmpeg crashed: {e}")
+
+def main():
+    movies = load_movies()
     if not movies:
-        print("❌ No movies in play.json")
-        return
+        print(f"📂 No entries in {PLAY_FILE}. Retrying in {RETRY_DELAY}s...")
+        time.sleep(RETRY_DELAY)
+        return main()
 
-    for movie in movies:
-        title = movie.get("title", "Untitled")
-        url = movie.get("url")
-        logo_url = movie.get("logo")
+    index = 0
+    while True:
+        stream_movie(movies[index])
+        index = (index + 1) % len(movies)
+        print("⏭️  Next movie in 5s...")
+        time.sleep(5)
 
-        if not url:
-            print(f"⚠️ Skipping {title} (no URL)")
-            continue
-
-        # ✅ Download logo if present
-        logo_file = download_logo(logo_url, "current_logo.png") if logo_url else None
-
-        print(f"🎬 Now streaming: {title}")
-        cmd = build_ffmpeg_command(url, title, logo_file)
-
-        try:
-            subprocess.run(cmd, check=True)
-        except subprocess.CalledProcessError as e:
-            print(f"⚠️ FFmpeg crashed for {title}, retrying in {RETRY_DELAY}s... {e}")
-            time.sleep(RETRY_DELAY)
-
-
-# ✅ Main entry
 if __name__ == "__main__":
-    print("🚀 Starting stream with buffering optimizations...")
-    play_streams()
+    main()

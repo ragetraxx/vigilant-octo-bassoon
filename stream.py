@@ -2,7 +2,7 @@ import os
 import json
 import subprocess
 import time
-import requests
+import urllib.request   # ✅ built-in, no extra installs needed
 
 # ✅ Configuration
 PLAY_FILE = "play.json"
@@ -34,25 +34,16 @@ def escape_drawtext(text):
     return text.replace('\\', '\\\\\\\\').replace(':', '\\:').replace("'", "\\'")
 
 def download_logo(url, filename="current_logo.png"):
-    """Download logo for the current movie."""
+    """Download logo for the current movie using urllib (no requests needed)."""
     try:
-        r = requests.get(url, timeout=10)
-        if r.status_code == 200:
-            with open(filename, "wb") as f:
-                f.write(r.content)
-            return filename
+        urllib.request.urlretrieve(url, filename)
+        return filename
     except Exception as e:
         print(f"⚠️ Failed to download logo: {e}")
     return None
 
 def build_ffmpeg_command(url, title, logo_file):
     text = escape_drawtext(title)
-
-    # NASA+ headers (if used)
-    input_options = [
-        "-user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-        "-headers", "Referer: https://plus.nasa.gov/\r\nOrigin: https://plus.nasa.gov\r\n"
-    ]
 
     # ✅ Case 1: Logo exists → overlay.png + logo (no title)
     if logo_file:
@@ -83,7 +74,6 @@ def build_ffmpeg_command(url, title, logo_file):
         "-flags", "low_delay",
         "-threads", "1",
         "-ss", str(PREBUFFER_SECONDS),
-        *input_options,
         *inputs,
         "-filter_complex", filter_complex,
         "-r", "29.97003",

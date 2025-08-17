@@ -35,14 +35,11 @@ def escape_drawtext(text):
 def build_ffmpeg_command(url, title):
     text = escape_drawtext(title)
 
-    # Extra headers if streaming from m3u8 sites
-    input_options = []
-    if ".m3u8" in url or "streamsvr" in url:
-        print(f"🔐 Spoofing headers for {url}")
-        input_options = [
-            "-user_agent", "Mozilla/5.0",
-            "-headers", "Referer: https://hollymoviehd.cc\r\n"
-        ]
+    # ✅ Always spoof VLC User-Agent for all formats
+    input_options = [
+        "-user_agent", "VLC/3.0.18 LibVLC/3.0.18",
+        "-headers", "Referer: https://hollymoviehd.cc\r\n"
+    ]
 
     return [
         "ffmpeg",
@@ -97,7 +94,7 @@ def stream_movie(movie):
                 process.kill()
                 return
             print(line.strip())
-        process.wait()  # ✅ Ensures movie fully plays before next
+        process.wait()  # ✅ Waits for full movie to finish
     except Exception as e:
         print(f"❌ FFmpeg crashed: {e}")
 

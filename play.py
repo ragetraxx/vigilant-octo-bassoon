@@ -32,7 +32,7 @@ def update_play_json():
     played_movies = load_movies(PLAY_FILE)  # Load previously played movies
 
     # Remove intro entries from played_movies
-    played_movies = [m for m in played_movies if m.get("title") != "Intro"]
+    played_movies = [m for m in played_movies if m.get("title") != "RageTV"]
 
     # Filter out movies that have already been played
     available_movies = [movie for movie in all_movies if movie not in played_movies]

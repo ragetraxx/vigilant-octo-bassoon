@@ -20,7 +20,7 @@ def save_play_movies(movies):
     """Overwrite play.json with new selected movies and insert intro video before each"""
     updated_list = []
     for movie in movies:
-        updated_list.append(INTRO_VIDEO)  # Insert intro video first
+        updated_list.append(INTRO_VIDEO)  # Add intro first
         updated_list.append(movie)        # Then the actual movie
 
     with open(PLAY_FILE, "w", encoding="utf-8") as file:
@@ -31,11 +31,18 @@ def update_play_json():
     all_movies = load_movies(MOVIE_FILE)  # Load all available movies
     played_movies = load_movies(PLAY_FILE)  # Load previously played movies
 
-    # Remove intro entries from played_movies
-    played_movies = [m for m in played_movies if m.get("title") != "RageTV"]
+    # Normalize played_movies to only objects with title
+    normalized_played = []
+    for m in played_movies:
+        if isinstance(m, dict):
+            if m.get("title") != "RageTV":  # Ignore intro
+                normalized_played.append(m)
+        else:
+            # If it's a string (old format), keep it
+            normalized_played.append(m)
 
     # Filter out movies that have already been played
-    available_movies = [movie for movie in all_movies if movie not in played_movies]
+    available_movies = [movie for movie in all_movies if movie not in normalized_played]
 
     # If there are not enough movies left, reset the cycle
     if len(available_movies) < 5:
@@ -47,7 +54,7 @@ def update_play_json():
 
     # Save intro + movies to play.json
     save_play_movies(selected_movies)
-    print("✅ Updated play.json with intro before each movie.")
+    print("✅ Updated play.json with RageTV intro before each movie.")
 
 if __name__ == "__main__":
     update_play_json()

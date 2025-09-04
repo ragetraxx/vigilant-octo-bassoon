@@ -5,7 +5,7 @@ MOVIE_FILE = "movies.json"  # Permanent source JSON file
 PLAY_FILE = "play.json"  # Stores selected movies
 INTRO_VIDEO = {
     "title": "RageTV",
-    "url": "https://video.gumlet.io/68b208ee7faf3595aba2a60b/68b20a2814a50ac8634389e2/68b20a2814a50ac8634389e2_0_720p.m3u8"
+    "url": "intro.mp4"
 }
 
 def load_movies(filename):

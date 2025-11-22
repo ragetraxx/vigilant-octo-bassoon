@@ -3,18 +3,18 @@ import json
 import subprocess
 import time
 
-# -------------------------------------
+# ----------------------------------------------------
 # Configuration
-# -------------------------------------
+# ----------------------------------------------------
 PLAY_FILE = "play.json"
 RTMP_URL = os.getenv("RTMP_URL")
 OVERLAY = os.path.abspath("overlay.png")
 FONT_PATH = os.path.abspath("Roboto-Black.ttf")
 RETRY_DELAY = 60
 
-# -------------------------------------
+# ----------------------------------------------------
 # Sanity Checks
-# -------------------------------------
+# ----------------------------------------------------
 if not RTMP_URL:
     print("❌ ERROR: RTMP_URL is not set!")
     exit(1)
@@ -24,9 +24,9 @@ for path, name in [(PLAY_FILE, "Playlist JSON"), (OVERLAY, "Overlay Image"), (FO
         print(f"❌ ERROR: {name} '{path}' not found!")
         exit(1)
 
-# -------------------------------------
+# ----------------------------------------------------
 # Helpers
-# -------------------------------------
+# ----------------------------------------------------
 def load_movies():
     try:
         with open(PLAY_FILE, "r", encoding="utf-8") as f:
@@ -42,56 +42,62 @@ def escape_drawtext(text):
             .replace("'", "\\'")
     )
 
-# -------------------------------------
-# FFmpeg Command Builder
-# -------------------------------------
+# ----------------------------------------------------
+# FFmpeg Command (with 404-bypass headers)
+# ----------------------------------------------------
 def build_ffmpeg_command(url, title):
     text = escape_drawtext(title)
 
+    # Android Chrome headers that work for: http://103.236.179.86:80/...
     input_headers = (
-        "User-Agent: VLC/3.0.18\r\n"
-        "Origin: *\r\n"
-        "Referer: https://hollymoviehd.cc/\r\n"
-        "Access-Control-Allow-Origin: *\r\n"
-        "Access-Control-Allow-Headers: *\r\n"
+        "User-Agent: Dalvik/2.1.0 (Linux; U; Android 10; Mobile) Chrome/120.0.0.0\r\n"
+        "Accept: */*\r\n"
+        "Range: bytes=0-\r\n"
+        "Connection: keep-alive\r\n"
+        "Icy-MetaData: 1\r\n"
     )
 
     return [
         "ffmpeg",
 
-        # --- No timeouts / auto reconnect ---
+        # No timeout issues
         "-timeout", "0",
         "-rw_timeout", "-1",
         "-http_persistent", "1",
+
+        # Auto reconnect on all errors
         "-reconnect", "1",
         "-reconnect_streamed", "1",
-        "-reconnect_delay_max", "4294",
-        "-http_seekable", "0",
+        "-reconnect_at_eof", "1",
+        "-reconnect_delay_max", "10",
+        "-reconnect_on_network_error", "1",
+        "-reconnect_on_http_error", "4xx,5xx",
 
-        # --- Stability flags ---
+        # Stability flags
         "-fflags", "+igndts+discardcorrupt+nobuffer",
         "-flags", "low_delay",
         "-threads", "1",
 
-        # --- Input spoofing ---
-        "-user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) VLC/3.0.18",
+        # Android spoof
+        "-user_agent", "Dalvik/2.1.0 (Linux; U; Android 10; Mobile) Chrome/120.0.0.0",
         "-headers", input_headers,
 
-        # --- Input file/stream ---
+        # Movie input
         "-i", url,
 
-        # --- Overlay ---
+        # Overlay
         "-i", OVERLAY,
         "-filter_complex",
         (
-            "[0:v]scale=1280:720:flags=lanczos,unsharp=5:5:0.8:5:5:0.0[v];"
+            "[0:v]scale=1280:720:flags=lanczos,"
+            "unsharp=5:5:0.8:5:5:0.0[v];"
             "[1:v]scale=1280:720[ol];"
             "[v][ol]overlay=0:0[vo];"
             f"[vo]drawtext=fontfile='{FONT_PATH}':text='{text}':"
             "fontcolor=white:fontsize=20:x=35:y=35"
         ),
 
-        # --- Output ---
+        # Output encoder
         "-r", "29.97",
         "-c:v", "libx264",
         "-preset", "ultrafast",
@@ -113,15 +119,15 @@ def build_ffmpeg_command(url, title):
         RTMP_URL,
     ]
 
-# -------------------------------------
-# Stream Logic
-# -------------------------------------
+# ----------------------------------------------------
+# Stream execution
+# ----------------------------------------------------
 def stream_movie(movie):
     title = movie.get("title", "Untitled")
     url = movie.get("url")
 
     if not url:
-        print(f"❌ Skipping '{title}': missing URL")
+        print(f"❌ Skipping '{title}': Missing URL")
         return
 
     print(f"\n🎬 Now streaming: {title}")
@@ -137,29 +143,29 @@ def stream_movie(movie):
             text=True
         )
 
-        # Read FFmpeg output live
         for line in process.stderr:
-            if "403" in line:
-                print(f"🚫 Forbidden (403): {title}")
+            if "404" in line:
+                print(f"🚫 404 from server → Forcing retry: {title}")
                 process.kill()
                 return
+
             print(line.strip())
 
-        process.wait()  # Wait until movie finishes
-        print(f"✔ Finished: {title}")
+        process.wait()
+        print(f"✔ Finished streaming: {title}")
 
     except Exception as e:
-        print(f"❌ FFmpeg error: {e}")
+        print(f"❌ FFmpeg crashed: {e}")
 
-# -------------------------------------
-# App Loop
-# -------------------------------------
+# ----------------------------------------------------
+# Main loop
+# ----------------------------------------------------
 def main():
     while True:
         movies = load_movies()
 
         if not movies:
-            print(f"\n📂 No entries in {PLAY_FILE}. Retrying in {RETRY_DELAY}s...")
+            print(f"📂 No movies found in {PLAY_FILE}. Retrying in {RETRY_DELAY}s...")
             time.sleep(RETRY_DELAY)
             continue
 

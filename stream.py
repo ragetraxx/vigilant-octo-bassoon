@@ -3,14 +3,15 @@ import json
 import subprocess
 import time
 
+# ✅ Configuration
 PLAY_FILE = "play.json"
 RTMP_URL = os.getenv("RTMP_URL")
 OVERLAY = os.path.abspath("overlay.png")
 FONT_PATH = os.path.abspath("Roboto-Black.ttf")
-
 RETRY_DELAY = 60
-MAX_RETRY_404 = 10
+PREBUFFER_SECONDS = 5
 
+# ✅ Sanity Checks
 if not RTMP_URL:
     print("❌ ERROR: RTMP_URL is not set!")
     exit(1)
@@ -34,55 +35,42 @@ def escape_drawtext(text):
 def build_ffmpeg_command(url, title):
     text = escape_drawtext(title)
 
-    headers = (
-        "User-Agent: Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 "
-        "(KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36\r\n"
-        "Accept: */*\r\n"
-        "Accept-Language: en-US,en;q=0.9\r\n"
-        "Referer: https://hollymoviehd.cc/\r\n"
-        "Origin: https://hollymoviehd.cc\r\n"
-        "Connection: keep-alive\r\n"
-    )
+    # ✅ Always spoof VLC User-Agent for all formats
+    input_options = [
+        "-user_agent", "VLC/3.0.18 LibVLC/3.0.18",
+        "-headers", "Referer: https://hollymoviehd.cc\r\n"
+    ]
 
     return [
         "ffmpeg",
         "-re",
-        "-seekable", "0",
-        "-fflags", "+discardcorrupt",
-        "-http_persistent", "1",
-
-        "-user_agent",
-        "Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 "
-        "(KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
-
-        "-headers", headers,
-
-        "-i", url,
+        "-fflags", "+nobuffer",
+        "-flags", "low_delay",
+        "-threads", "1",
+        "-ss", str(PREBUFFER_SECONDS),
+        *input_options,
+        "-i", url,             # Works with mkv, mp4, avi, mov, m3u8, etc.
         "-i", OVERLAY,
-
         "-filter_complex",
-        (
-            "[0:v]scale=1280:720:flags=lanczos,unsharp=5:5:0.8:5:5:0.0[v];"
-            "[1:v]scale=1280:720[ol];"
-            "[v][ol]overlay=0:0[vo];"
-            f"[vo]drawtext=fontfile='{FONT_PATH}':text='{text}':fontcolor=white:"
-            "fontsize=20:x=35:y=35"
-        ),
-
+        f"[0:v]scale=1280:720:flags=lanczos,unsharp=5:5:0.8:5:5:0.0[v];"
+        f"[1:v]scale=1280:720[ol];"
+        f"[v][ol]overlay=0:0[vo];"
+        f"[vo]drawtext=fontfile='{FONT_PATH}':text='{text}':fontcolor=white:fontsize=20:x=35:y=35",
         "-r", "29.97",
         "-c:v", "libx264",
-        "-preset", "fast",
+        "-preset", "ultrafast",
         "-tune", "zerolatency",
-        "-pix_fmt", "yuv420p",
+        "-g", "60",
+        "-keyint_min", "60",
+        "-sc_threshold", "0",
         "-b:v", "1500k",
         "-maxrate", "2000k",
         "-bufsize", "2000k",
-
+        "-pix_fmt", "yuv420p",
         "-c:a", "aac",
         "-b:a", "128k",
         "-ar", "48000",
         "-ac", "2",
-
         "-f", "flv",
         RTMP_URL
     ]
@@ -90,40 +78,25 @@ def build_ffmpeg_command(url, title):
 def stream_movie(movie):
     title = movie.get("title", "Untitled")
     url = movie.get("url")
+
     if not url:
         print(f"❌ Skipping '{title}': no URL")
         return
 
-    print(f"\n🎬 Streaming: {title}")
-    print(f"🔗 URL: {url}")
+    print(f"🎬 Now streaming: {title}")
+    command = build_ffmpeg_command(url, title)
 
-    retry = 0
-    while retry < MAX_RETRY_404:
-        command = build_ffmpeg_command(url, title)
-        process = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.DEVNULL, text=True)
-
-        hit_404 = False
-
+    try:
+        process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
         for line in process.stderr:
-            line = line.strip()
-            print(line)
-
-            if "404" in line or "Not Found" in line:
-                hit_404 = True
-                break
-
-        process.kill()
-
-        if hit_404:
-            retry += 1
-            print(f"⚠️ 404 detected! Retrying {retry}/{MAX_RETRY_404}…")
-            time.sleep(2)
-            continue
-
-        break
-
-    if retry >= MAX_RETRY_404:
-        print(f"❌ Skipped {title} — too many 404 errors.")
+            if "403 Forbidden" in line:
+                print(f"🚫 403 Forbidden! Skipping: {title}")
+                process.kill()
+                return
+            print(line.strip())
+        process.wait()  # ✅ Waits for full movie to finish
+    except Exception as e:
+        print(f"❌ FFmpeg crashed: {e}")
 
 def main():
     while True:
@@ -135,7 +108,7 @@ def main():
 
         for movie in movies:
             stream_movie(movie)
-            print("\n⏭ Next movie in 5 seconds…")
+            print("⏭️  Next movie in 5s...")
             time.sleep(5)
 
 if __name__ == "__main__":

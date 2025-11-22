@@ -3,14 +3,14 @@ import json
 import subprocess
 import time
 
-# Configuration
 PLAY_FILE = "play.json"
 RTMP_URL = os.getenv("RTMP_URL")
 OVERLAY = os.path.abspath("overlay.png")
 FONT_PATH = os.path.abspath("Roboto-Black.ttf")
-RETRY_DELAY = 60
 
-# Sanity Checks
+RETRY_DELAY = 60
+MAX_RETRY_404 = 10
+
 if not RTMP_URL:
     print("❌ ERROR: RTMP_URL is not set!")
     exit(1)
@@ -24,7 +24,8 @@ def load_movies():
     try:
         with open(PLAY_FILE, "r") as f:
             return json.load(f) or []
-    except:
+    except Exception as e:
+        print(f"❌ Failed to load {PLAY_FILE}: {e}")
         return []
 
 def escape_drawtext(text):
@@ -33,39 +34,44 @@ def escape_drawtext(text):
 def build_ffmpeg_command(url, title):
     text = escape_drawtext(title)
 
-    # Android headers (works with your server)
-    header_string = (
-        "User-Agent: Dalvik/2.1.0 (Linux; U; Android 10; Mobile) Chrome/120.0.0.0\r\n"
+    headers = (
+        "User-Agent: Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36\r\n"
         "Accept: */*\r\n"
-        "Range: bytes=0-\r\n"
+        "Accept-Language: en-US,en;q=0.9\r\n"
+        "Referer: https://hollymoviehd.cc/\r\n"
+        "Origin: https://hollymoviehd.cc\r\n"
         "Connection: keep-alive\r\n"
     )
 
     return [
         "ffmpeg",
         "-re",
-
+        "-seekable", "0",
+        "-fflags", "+discardcorrupt",
         "-http_persistent", "1",
-        "-reconnect", "1",
-        "-reconnect_streamed", "1",
-        "-reconnect_at_eof", "1",
-        "-reconnect_delay_max", "10",
 
-        "-user_agent", "Dalvik/2.1.0 (Linux; U; Android 10; Mobile) Chrome/120.0.0.0",
-        "-headers", header_string,
+        "-user_agent",
+        "Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
 
-        "-i", url,   # NO -ss BEFORE THIS
+        "-headers", headers,
 
+        "-i", url,
         "-i", OVERLAY,
+
         "-filter_complex",
-        f"[0:v]scale=1280:720:flags=lanczos,unsharp=5:5:0.8:5:5:0.0[v];"
-        f"[1:v]scale=1280:720[ol];"
-        f"[v][ol]overlay=0:0[vo];"
-        f"[vo]drawtext=fontfile='{FONT_PATH}':text='{text}':fontcolor=white:fontsize=20:x=35:y=35",
+        (
+            "[0:v]scale=1280:720:flags=lanczos,unsharp=5:5:0.8:5:5:0.0[v];"
+            "[1:v]scale=1280:720[ol];"
+            "[v][ol]overlay=0:0[vo];"
+            f"[vo]drawtext=fontfile='{FONT_PATH}':text='{text}':fontcolor=white:"
+            "fontsize=20:x=35:y=35"
+        ),
 
         "-r", "29.97",
         "-c:v", "libx264",
-        "-preset", "ultrafast",
+        "-preset", "fast",
         "-tune", "zerolatency",
         "-pix_fmt", "yuv420p",
         "-b:v", "1500k",
@@ -84,36 +90,52 @@ def build_ffmpeg_command(url, title):
 def stream_movie(movie):
     title = movie.get("title", "Untitled")
     url = movie.get("url")
-
     if not url:
         print(f"❌ Skipping '{title}': no URL")
         return
 
-    print(f"🎬 Now streaming: {title}")
+    print(f"\n🎬 Streaming: {title}")
+    print(f"🔗 URL: {url}")
 
-    process = subprocess.Popen(
-        build_ffmpeg_command(url, title),
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.PIPE,
-        text=True
-    )
+    retry = 0
+    while retry < MAX_RETRY_404:
+        command = build_ffmpeg_command(url, title)
+        process = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.DEVNULL, text=True)
 
-    for line in process.stderr:
-        print(line.strip())
+        hit_404 = False
 
-    process.wait()
+        for line in process.stderr:
+            line = line.strip()
+            print(line)
+
+            if "404" in line or "Not Found" in line:
+                hit_404 = True
+                break
+
+        process.kill()
+
+        if hit_404:
+            retry += 1
+            print(f"⚠️ 404 detected! Retrying {retry}/{MAX_RETRY_404}…")
+            time.sleep(2)
+            continue
+
+        break
+
+    if retry >= MAX_RETRY_404:
+        print(f"❌ Skipped {title} — too many 404 errors.")
 
 def main():
     while True:
         movies = load_movies()
         if not movies:
-            print("📂 No entries. Retrying...")
+            print(f"📂 No entries in {PLAY_FILE}. Retrying in {RETRY_DELAY}s...")
             time.sleep(RETRY_DELAY)
             continue
 
         for movie in movies:
             stream_movie(movie)
-            print("⏭️ Next movie in 5s...")
+            print("\n⏭ Next movie in 5 seconds…")
             time.sleep(5)
 
 if __name__ == "__main__":

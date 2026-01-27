@@ -1,5 +1,53 @@
 [
     {
+        "image": "https://media.themoviedb.org/t/p/w220_and_h330_face/5MDnvvkOqthhE5gQebzkcOhD1p5.jpg",
+        "category": "Movie Library",
+        "title": "Anaconda (2025)",
+        "url": "https://khdiamondcdn.asia/gs/D5GYN6PaiYXLLS2"
+    },
+    {
+        "image": "https://media.themoviedb.org/t/p/w220_and_h330_face/iQCtK477yqp6xnHHrQG2P0lXoow.jpg",
+        "category": "Movie Library",
+        "title": "Ella McCay (2025)",
+        "url": "https://khdiamondcdn.asia/gs/CLVZd-UlZYsbJ19"
+    },
+    {
+        "image": "https://media.themoviedb.org/t/p/w220_and_h330_face/z2tqCJLsw6uEJ8nJV8BsQXGa3dr.jpg",
+        "category": "Movie Library",
+        "title": "Greenland 2: Migration (2026)",
+        "url": "https://khdiamondcdn.asia/gs/gFTr9db3HHJnTsq"
+    },
+    {
+        "image": "https://media.themoviedb.org/t/p/w220_and_h330_face/oJ7g2CifqpStmoYQyaLQgEU32qO.jpg",
+        "category": "Movie Library",
+        "title": "Zootopia 2 (2025)",
+        "url": "https://khdiamondcdn.asia/gs/2QAtQJIxX6cpK8M"
+    },
+    {
+        "image": "https://media.themoviedb.org/t/p/w220_and_h330_face/ldXDkCXnCdGmZO7XHAumUGoD9UW.jpg",
+        "category": "Movie Library",
+        "title": "Odyssey (2025)",
+        "url": "https://khdiamondcdn.asia/gs/a1zHqkg0xG_05IN"
+    },
+    {
+        "image": "https://media.themoviedb.org/t/p/w220_and_h330_face/81szv19zvs5fGqXtWau6tXzfC4T.jpg",
+        "category": "Movie Library",
+        "title": "Disneyland Handcrafted (2026)",
+        "url": "https://khdiamondcdn.asia/gs/6Jyn_TuhhIGwkn2"
+    },
+    {
+        "image": "https://media.themoviedb.org/t/p/w220_and_h330_face/hMVhZxgbFLXZcDUIZ10NGb6s8w4.jpg",
+        "category": "Movie Library",
+        "title": "Kidnapped: Elizabeth Smart (2026)",
+        "url": "https://khdiamondcdn.asia/gs/9tOO_6pj58ryHb4"
+    },
+    {
+        "image": "https://media.themoviedb.org/t/p/w220_and_h330_face/8h3uNPMdQKr7ffwAjU0aURFqIK.jpg",
+        "category": "Movie Library",
+        "title": "Merrily We Roll Along (2025)",
+        "url": "https://khdiamondcdn.asia/gs/tOf41FUdzpJUk3S"
+    },
+    {
         "image": "https://media.themoviedb.org/t/p/w220_and_h330_face/pDWYW9v8fmJdA7N0I1MOdQA3ETq.jpg",
         "category": "Movie Library",
         "title": "The SpongeBob Movie: Search for SquarePants (2025)",

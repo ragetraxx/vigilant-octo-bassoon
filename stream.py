@@ -8,20 +8,23 @@ PLAY_FILE = "play.json"
 RTMP_URL = os.getenv("RTMP_URL")
 OVERLAY = os.path.abspath("overlay.png")
 FONT_PATH = os.path.abspath("Roboto-Black.ttf")
-PREBUFFER_SECONDS = 1  # Reduced for faster non-stop transitions
+RETRY_DELAY = 60
+PREBUFFER_SECONDS = 5
 
 # ✅ Sanity Checks
 if not RTMP_URL:
     print("❌ ERROR: RTMP_URL is not set!")
     exit(1)
 
+for path, name in [(PLAY_FILE, "Playlist JSON"), (OVERLAY, "Overlay Image"), (FONT_PATH, "Font File")]:
+    if not os.path.exists(path):
+        print(f"❌ ERROR: {name} '{path}' not found!")
+        exit(1)
+
 def load_movies():
     try:
-        if not os.path.exists(PLAY_FILE):
-            return []
         with open(PLAY_FILE, "r") as f:
-            data = json.load(f)
-            return data if isinstance(data, list) and len(data) > 0 else []
+            return json.load(f) or []
     except Exception as e:
         print(f"❌ Failed to load {PLAY_FILE}: {e}")
         return []
@@ -30,94 +33,83 @@ def escape_drawtext(text):
     return text.replace('\\', '\\\\\\\\').replace(':', '\\:').replace("'", "\\'")
 
 def build_ffmpeg_command(url, title):
-    safe_title = escape_drawtext(title.upper())
+    text = escape_drawtext(title)
 
-    # ✅ NON-STOP INPUT LOGIC: Aggressive reconnection and buffer management
+    # ✅ Always spoof VLC User-Agent for all formats
     input_options = [
-        "-user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        "-headers", "Referer: https://screenify.fun/\r\nOrigin: https://screenify.fun\r\n",
-        "-reconnect", "1", 
-        "-reconnect_at_eof", "1", 
-        "-reconnect_streamed", "1",
-        "-reconnect_delay_max", "2",      # Fast reconnect
-        "-fflags", "+nobuffer+genpts+igndts+flush_packets", 
-        "-probesize", "20M",              # High probe for instant audio detection
-        "-analyzeduration", "20M"
+        "-user_agent", "VLC/3.0.18 LibVLC/3.0.18",
+        "-headers", "Referer: https://hollymoviehd.cc\r\n"
     ]
-
-    filter_string = (
-        f"[0:v]scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720[main];" # Fits any aspect ratio
-        f"[1:v]scale=1280:720[ol];"
-        f"[main][ol]overlay=0:0[v_base];"
-        f"[v_base]drawbox=y=ih-45:color=black@0.6:width=iw:height=45:t=fill[v_bar];" 
-        f"[v_bar]drawtext=fontfile='{FONT_PATH}':text='NOW PLAYING\\: {safe_title}':"
-        f"fontcolor=white:fontsize=24:y=h-32:x=w-mod(t*90\\,w+1000)[outv]" 
-    )
 
     return [
         "ffmpeg",
         "-re",
+        "-fflags", "+nobuffer",
+        "-flags", "low_delay",
+        "-threads", "1",
+        "-ss", str(PREBUFFER_SECONDS),
         *input_options,
-        "-i", url,
+        "-i", url,             # Works with mkv, mp4, avi, mov, m3u8, etc.
         "-i", OVERLAY,
-        "-filter_complex", filter_string,
-        "-map", "[outv]", 
-        "-map", "0:a:m:language:eng?", 
-        "-map", "0:a:0?", 
+        "-filter_complex",
+        f"[0:v]scale=1280:720:flags=lanczos,unsharp=5:5:0.8:5:5:0.0[v];"
+        f"[1:v]scale=1280:720[ol];"
+        f"[v][ol]overlay=0:0[vo];"
+        f"[vo]drawtext=fontfile='{FONT_PATH}':text='{text}':fontcolor=white:fontsize=20:x=35:y=35",
+        "-r", "29.97",
         "-c:v", "libx264",
-        "-preset", "ultrafast", # Fastest encoding for 24/7 stability
+        "-preset", "ultrafast",
         "-tune", "zerolatency",
         "-g", "60",
-        "-b:v", "2500k",
+        "-keyint_min", "60",
+        "-sc_threshold", "0",
+        "-b:v", "1500k",
+        "-maxrate", "2000k",
+        "-bufsize", "2000k",
         "-pix_fmt", "yuv420p",
         "-c:a", "aac",
         "-b:a", "128k",
+        "-ar", "48000",
         "-ac", "2",
-        "-ar", "44100",
-        "-af", "aresample=async=1",
         "-f", "flv",
-        "-flvflags", "no_duration_filesize", # Optimized for streaming
         RTMP_URL
     ]
 
-def stream_loop():
-    print("🎬 Starting 24/7 Non-Stop Broadcast...")
-    
+def stream_movie(movie):
+    title = movie.get("title", "Untitled")
+    url = movie.get("url")
+
+    if not url:
+        print(f"❌ Skipping '{title}': no URL")
+        return
+
+    print(f"🎬 Now streaming: {title}")
+    command = build_ffmpeg_command(url, title)
+
+    try:
+        process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+        for line in process.stderr:
+            if "403 Forbidden" in line:
+                print(f"🚫 403 Forbidden! Skipping: {title}")
+                process.kill()
+                return
+            print(line.strip())
+        process.wait()  # ✅ Waits for full movie to finish
+    except Exception as e:
+        print(f"❌ FFmpeg crashed: {e}")
+
+def main():
     while True:
         movies = load_movies()
-        
         if not movies:
-            print("📂 Playlist is empty or play.json missing. Waiting 10s...")
-            time.sleep(10)
+            print(f"📂 No entries in {PLAY_FILE}. Retrying in {RETRY_DELAY}s...")
+            time.sleep(RETRY_DELAY)
             continue
 
         for movie in movies:
-            title = movie.get("title", "Feature Film")
-            url = movie.get("url")
-            
-            if not url:
-                continue
-
-            print(f"📡 Now Playing: {title}")
-            command = build_ffmpeg_command(url, title)
-
-            try:
-                # Start FFmpeg
-                process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
-                
-                # We monitor for fatal errors to skip bad links quickly
-                for line in process.stderr:
-                    if "403 Forbidden" in line or "Server returned 404" in line:
-                        print(f"⚠️ Link expired/blocked: {title}. Skipping...")
-                        process.terminate()
-                        break
-                
-                process.wait() # Wait for movie to finish normally
-            except Exception as e:
-                print(f"🔥 FFmpeg Encountered an Error: {e}")
-                time.sleep(2) # Brief pause before next movie
-            
-            print("⏭️ Moving to next program immediately...")
+            stream_movie(movie)
+            print("⏭️  Next movie in 5s...")
+            time.sleep(5)
 
 if __name__ == "__main__":
-    stream_loop()
+    main()

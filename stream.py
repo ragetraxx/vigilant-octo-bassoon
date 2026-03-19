@@ -24,7 +24,8 @@ for path, name in [(PLAY_FILE, "Playlist JSON"), (OVERLAY, "Overlay Image"), (FO
 def load_movies():
     try:
         with open(PLAY_FILE, "r") as f:
-            return json.load(f) or []
+            data = json.load(f)
+            return data if isinstance(data, list) else []
     except Exception as e:
         print(f"❌ Failed to load {PLAY_FILE}: {e}")
         return []
@@ -35,42 +36,53 @@ def escape_drawtext(text):
 def build_ffmpeg_command(url, title):
     text = escape_drawtext(title)
 
-    # ✅ Always spoof VLC User-Agent for all formats
+    # ✅ Headers required to bypass some site protections
     input_options = [
         "-user_agent", "VLC/3.0.18 LibVLC/3.0.18",
-        "-headers", "Referer: https://hollymoviehd.cc\r\n"
+        "-headers", "Referer: https://hollymoviehd.cc\r\n",
+        "-reconnect", "1",
+        "-reconnect_at_eof", "1",
+        "-reconnect_streamed", "1",
+        "-reconnect_delay_max", "5"
     ]
 
     return [
         "ffmpeg",
         "-re",
-        "-fflags", "+nobuffer",
+        "-fflags", "+nobuffer+genpts",
         "-flags", "low_delay",
-        "-threads", "1",
+        "-threads", "2",
         "-ss", str(PREBUFFER_SECONDS),
         *input_options,
-        "-i", url,             # Works with mkv, mp4, avi, mov, m3u8, etc.
+        "-i", url,
         "-i", OVERLAY,
         "-filter_complex",
+        # Video: Scale, sharpen, and add the overlay + title text
         f"[0:v]scale=1280:720:flags=lanczos,unsharp=5:5:0.8:5:5:0.0[v];"
         f"[1:v]scale=1280:720[ol];"
         f"[v][ol]overlay=0:0[vo];"
-        f"[vo]drawtext=fontfile='{FONT_PATH}':text='{text}':fontcolor=white:fontsize=20:x=35:y=35",
-        "-r", "29.97",
+        f"[vo]drawtext=fontfile='{FONT_PATH}':text='{text}':fontcolor=white:fontsize=20:x=35:y=35[outv]",
+        
+        # ✅ THE MAGIC: Automated Audio Logic
+        "-map", "[outv]", 
+        "-map", "0:a:m:language:eng?", # 1. Seek English specifically
+        "-map", "0:a:0?",              # 2. Fallback to track 1
+        "-map", "0:a:1?",              # 3. Fallback to track 2
+        
         "-c:v", "libx264",
         "-preset", "ultrafast",
         "-tune", "zerolatency",
         "-g", "60",
-        "-keyint_min", "60",
-        "-sc_threshold", "0",
-        "-b:v", "1500k",
-        "-maxrate", "2000k",
-        "-bufsize", "2000k",
+        "-b:v", "2500k",               # Increased for better quality
         "-pix_fmt", "yuv420p",
+        
+        # ✅ Audio encoding for FLV (RTMP Standard)
         "-c:a", "aac",
         "-b:a", "128k",
-        "-ar", "48000",
-        "-ac", "2",
+        "-ac", "2",                    # Downmix 5.1 to Stereo so voices aren't lost
+        "-ar", "44100",
+        "-af", "aresample=async=1",    # Keeps A/V synced
+        
         "-f", "flv",
         RTMP_URL
     ]
@@ -90,25 +102,24 @@ def stream_movie(movie):
         process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
         for line in process.stderr:
             if "403 Forbidden" in line:
-                print(f"🚫 403 Forbidden! Skipping: {title}")
-                process.kill()
+                print(f"🚫 403 Forbidden on: {title}")
+                process.terminate()
                 return
-            print(line.strip())
-        process.wait()  # ✅ Waits for full movie to finish
+            # Uncomment below to debug audio stream mapping in console
+            # print(line.strip())
+        process.wait()
     except Exception as e:
-        print(f"❌ FFmpeg crashed: {e}")
+        print(f"❌ FFmpeg Error: {e}")
 
 def main():
     while True:
         movies = load_movies()
         if not movies:
-            print(f"📂 No entries in {PLAY_FILE}. Retrying in {RETRY_DELAY}s...")
-            time.sleep(RETRY_DELAY)
+            time.sleep(10)
             continue
 
         for movie in movies:
             stream_movie(movie)
-            print("⏭️  Next movie in 5s...")
             time.sleep(5)
 
 if __name__ == "__main__":

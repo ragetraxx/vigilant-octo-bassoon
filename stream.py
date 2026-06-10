@@ -35,37 +35,48 @@ def escape_drawtext(text):
 def build_ffmpeg_command(url, title):
     text = escape_drawtext(title)
 
-    # ✅ Always spoof VLC User-Agent for all formats
+    # ✅ Network optimizations to prevent buffering dropouts
     input_options = [
         "-user_agent", "VLC/3.0.18 LibVLC/3.0.18",
-        "-headers", "Referer: https://hollymoviehd.cc\r\n"
+        "-headers", "Referer: https://hollymoviehd.cc\r\n",
+        "-reconnect", "1",
+        "-reconnect_at_eof", "1",
+        "-reconnect_streamed", "1",
+        "-reconnect_delay_max", "5",
+        "-fflags", "+genpts+async", # Fix timestamp issues on multi-track streams
     ]
 
     return [
         "ffmpeg",
-        "-re",
-        "-fflags", "+nobuffer",
-        "-flags", "low_delay",
-        "-threads", "1",
-        "-ss", str(PREBUFFER_SECONDS),
+        # ❌ REMOVED "-re" -> Let the network stream pull at its maximum capability
+        # ❌ REMOVED "-threads 1" -> Let FFmpeg handle decoding threading smoothly
         *input_options,
-        "-i", url,             # Works with mkv, mp4, avi, mov, m3u8, etc.
+        "-ss", str(PREBUFFER_SECONDS),
+        "-i", url,
         "-i", OVERLAY,
+        
+        # ✅ FIX: Map only the first valid video track and first valid audio track
+        # This completely ignores secondary video/audio tracks that cause buffering mismatches.
+        "-map", "0:v:0",
+        "-map", "0:a:0",
+        "-map", "1:v:0", # Map the overlay image
+        
         "-filter_complex",
-        f"[0:v]scale=1280:720:flags=lanczos,unsharp=5:5:0.8:5:5:0.0[v];"
-        f"[1:v]scale=1280:720[ol];"
+        f"[0:v:0]scale=1280:720:flags=lanczos,unsharp=5:5:0.8:5:5:0.0[v];"
+        f"[1:v:0]scale=1280:720[ol];"
         f"[v][ol]overlay=0:0[vo];"
         f"[vo]drawtext=fontfile='{FONT_PATH}':text='{text}':fontcolor=white:fontsize=20:x=35:y=35",
+        
         "-r", "29.97",
         "-c:v", "libx264",
-        "-preset", "ultrafast",
+        "-preset", "veryfast", # Changed from ultrafast to veryfast for better encoding stability
         "-tune", "zerolatency",
         "-g", "60",
         "-keyint_min", "60",
         "-sc_threshold", "0",
         "-b:v", "1000k",
         "-maxrate", "1500k",
-        "-bufsize", "1500k",
+        "-bufsize", "3000k",  # ✅ Increased buffer size to give network headroom
         "-pix_fmt", "yuv420p",
         "-c:a", "aac",
         "-b:a", "128k",
@@ -93,8 +104,10 @@ def stream_movie(movie):
                 print(f"🚫 403 Forbidden! Skipping: {title}")
                 process.kill()
                 return
-            print(line.strip())
-        process.wait()  # ✅ Waits for full movie to finish
+            # Print important logs only to avoid flooding but allowing debug
+            if "Error" in line or "ws" in line or "frame=" in line[:6]:
+                print(line.strip())
+        process.wait()
     except Exception as e:
         print(f"❌ FFmpeg crashed: {e}")
 

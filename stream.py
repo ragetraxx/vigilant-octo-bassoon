@@ -35,31 +35,42 @@ def escape_drawtext(text):
 def build_ffmpeg_command(url, title):
     text = escape_drawtext(title)
 
-    # ✅ Network optimizations to prevent buffering dropouts
+    # ✅ Your Exact Spoof Parameters (Extracted cleanly)
+    UA_STRING = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36"
+    
+    # ✅ Integrated your customized headers, timeout strings, and reconnect logic
     input_options = [
-        "-user_agent", "VLC/3.0.18 LibVLC/3.0.18",
-        "-headers", "Referer: https://hollymoviehd.cc\r\n",
+        "-user_agent", UA_STRING,
+
+        # We append User-Agent here too because FFmpeg drops the standalone flag on sub-playlists/segments
+        "-headers", (
+            "Referer: https://screenify.fun/\r\n"
+            "Origin: https://screenify.fun\r\n"
+            f"User-Agent: {UA_STRING}\r\n"
+        ),
+
+        "-rw_timeout", "15000000",
+        "-timeout", "15000000",
+
         "-reconnect", "1",
-        "-reconnect_at_eof", "1",
         "-reconnect_streamed", "1",
+        "-reconnect_at_eof", "1",
         "-reconnect_delay_max", "5",
-        "-fflags", "+genpts+async", # Fix timestamp issues on multi-track streams
+
+        "-fflags", "+genpts+async",
     ]
 
     return [
         "ffmpeg",
-        # ❌ REMOVED "-re" -> Let the network stream pull at its maximum capability
-        # ❌ REMOVED "-threads 1" -> Let FFmpeg handle decoding threading smoothly
         *input_options,
         "-ss", str(PREBUFFER_SECONDS),
         "-i", url,
         "-i", OVERLAY,
         
-        # ✅ FIX: Map only the first valid video track and first valid audio track
-        # This completely ignores secondary video/audio tracks that cause buffering mismatches.
+        # ✅ Forces track isolation (solves multiple track buffering/freezing loops)
         "-map", "0:v:0",
         "-map", "0:a:0",
-        "-map", "1:v:0", # Map the overlay image
+        "-map", "1:v:0", 
         
         "-filter_complex",
         f"[0:v:0]scale=1280:720:flags=lanczos,unsharp=5:5:0.8:5:5:0.0[v];"
@@ -69,14 +80,14 @@ def build_ffmpeg_command(url, title):
         
         "-r", "29.97",
         "-c:v", "libx264",
-        "-preset", "veryfast", # Changed from ultrafast to veryfast for better encoding stability
+        "-preset", "veryfast",
         "-tune", "zerolatency",
         "-g", "60",
         "-keyint_min", "60",
         "-sc_threshold", "0",
         "-b:v", "1000k",
         "-maxrate", "1500k",
-        "-bufsize", "3000k",  # ✅ Increased buffer size to give network headroom
+        "-bufsize", "3000k", 
         "-pix_fmt", "yuv420p",
         "-c:a", "aac",
         "-b:a", "128k",
@@ -99,14 +110,21 @@ def stream_movie(movie):
 
     try:
         process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+        
+        # ✅ Integrated your exact loop and real-time response checks
         for line in process.stderr:
-            if "403 Forbidden" in line:
-                print(f"🚫 403 Forbidden! Skipping: {title}")
+            print(line.strip())
+
+            if "404" in line:
+                print(f"❌ Stream URL expired: {title}")
                 process.kill()
                 return
-            # Print important logs only to avoid flooding but allowing debug
-            if "Error" in line or "ws" in line or "frame=" in line[:6]:
-                print(line.strip())
+
+            if "403" in line:
+                print(f"❌ Access denied: {title}")
+                process.kill()
+                return
+
         process.wait()
     except Exception as e:
         print(f"❌ FFmpeg crashed: {e}")

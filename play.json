@@ -1,92 +1,92 @@
 [
     {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/7zv4lXi3YqlCCDtdqO309RWQp2.jpg",
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/b6IMGRpfH5PzaTX5zKpNIXOBRXW.jpg",
         "category": "Movie Library",
-        "title": "Shangri-La Frontier S02E05",
-        "url": "http://103.196.177.230:80/series/rictms/rictms/2249.mkv"
+        "title": "The Outsider S01E03",
+        "url": "http://103.196.177.230/series/rictms/rictms/4323.mkv"
     },
     {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/jNsttCWZyPtW66MjhUozBzVsRb7.jpg",
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/vei2PdWm9UfeFOIKZcrdHHVgKqp.jpg",
         "category": "Movie Library",
-        "title": "Sisu: Road to Revenge (2025)",
-        "url": "http://103.196.177.230:80/movie/rictms/rictms/152.mkv"
+        "title": "The Baby S01E01",
+        "url": "http://103.196.177.230/series/rictms/rictms/4614.mp4"
     },
     {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/jXGtTcqfYmwDdIpkE0nk1l0PgYL.jpg",
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/62HCnUTziyWcpDaBO2i1DX17ljH.jpg",
         "category": "Movie Library",
-        "title": "The Big Bang Theory S04E07",
-        "url": "http://103.196.177.230:80/series/rictms/rictms/5303.mkv"
+        "title": "Top Gun: Maverick (2022)",
+        "url": "http://103.196.177.230/movie/rictms/rictms/227.mp4"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w1280/jy3EDNjby3CCJEi9IS5C47ZHaeO.jpg",
+        "category": "Movie Library",
+        "title": "Monarch: Legacy of Monsters S01E02",
+        "url": "http://103.196.177.230/series/rictms/rictms/2599.mkv"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/9KyWS1X2fkdc2RgHH3P0UeENzHk.jpg",
+        "category": "Movie Library",
+        "title": "Crash Landing on You S01E10",
+        "url": "http://103.196.177.230/series/rictms/rictms/3985.mkv"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/q0bhAlY77x9XwfpHYrDScHZvMQE.jpg",
+        "category": "Movie Library",
+        "title": "The Big Bang Theory S02E03",
+        "url": "http://103.196.177.230/series/rictms/rictms/5253.mkv"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/xZVoA1FuQjovjZSqMT3HqXWzUfG.jpg",
+        "category": "Movie Library",
+        "title": "Bloat (2025)",
+        "url": "http://103.196.177.230/movie/rictms/rictms/1586.mp4"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/utS5euWHlEdKBNnEFwjpZ2oGuhF.jpg",
+        "category": "Movie Library",
+        "title": "The Expendables 3 (2014)",
+        "url": "http://103.196.177.230/movie/rictms/rictms/4146.mp4"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/ubHHb40CWCdRdK759vMJH0J6DRI.jpg",
+        "category": "Movie Library",
+        "title": "Talamasca: The Secret Order S01E02",
+        "url": "http://103.196.177.230/series/rictms/rictms/1969.mkv"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/qlCn94ELdO1tYz8SAOe9iUVVdxD.jpg",
+        "category": "Movie Library",
+        "title": "Weak Hero S01E01",
+        "url": "http://103.196.177.230/series/rictms/rictms/3781.mp4"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w1280/AbABGEWs2IkvStrqyeBxbwmMlUV.jpg",
+        "category": "Movie Library",
+        "title": "Money Heist S01E12",
+        "url": "http://103.196.177.230/series/rictms/rictms/724.mkv"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/oUqsq3wN85OBXni60q18R3Iy5LV.jpg",
+        "category": "Movie Library",
+        "title": "Red Rose S01E05",
+        "url": "http://103.196.177.230/series/rictms/rictms/4438.mp4"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/7rNWBCcBW6YE6n49K5d2EWDpt0R.jpg",
+        "category": "Movie Library",
+        "title": "Under the Dome S01E01",
+        "url": "http://103.196.177.230/series/rictms/rictms/4277.mkv"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/x6rVyCAvvr0yprytwRRQhKw2l9e.jpg",
+        "category": "Movie Library",
+        "title": "The Glory S01E07",
+        "url": "http://103.196.177.230/series/rictms/rictms/1461.mkv"
     },
     {
         "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/avJ1kF7vZUcpPX0wU2iAvalaHcE.jpg",
         "category": "Movie Library",
-        "title": "Hunter x Hunter S01E79",
-        "url": "http://103.196.177.230:80/series/rictms/rictms/4716.mkv"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/ut6vPgxvlmZbydtf3Dq0hycSoQ8.jpg",
-        "category": "Movie Library",
-        "title": "Primal S03E02",
-        "url": "http://103.196.177.230:80/series/rictms/rictms/2766.mkv"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/1cKLG9KMoCjsgFB8Nw1EuglteVi.jpg",
-        "category": "Movie Library",
-        "title": "Agent Zeta (2026)",
-        "url": "http://103.196.177.230:80/movie/rictms/rictms/3016.mkv"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/gtP4Hja3ktZVOiMAYLkEk9dSuRD.jpg",
-        "category": "Movie Library",
-        "title": "Money Heist S04E08",
-        "url": "http://103.196.177.230:80/series/rictms/rictms/1107.mkv"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/rEwyssPOg9mCC1n8mOR9dJL3fWA.jpg",
-        "category": "Movie Library",
-        "title": "Descendants of the Sun S01E15",
-        "url": "http://103.196.177.230:80/series/rictms/rictms/3308.mkv"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/5mimFhtPvrIlmEdRsevtnCSSvon.jpg",
-        "category": "Movie Library",
-        "title": "Euphoria S01E03",
-        "url": "http://103.196.177.230:80/series/rictms/rictms/1540.mkv"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/TnOeov4w0sTtV2gqICqIxVi74V.jpg",
-        "category": "Movie Library",
-        "title": "Project Power (2020)",
-        "url": "http://103.196.177.230:80/movie/rictms/rictms/267.mp4"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/nyskn0IxG9i7Vee12G4CNRxFgmA.jpg",
-        "category": "Movie Library",
-        "title": "Record of Ragnarok S01E08",
-        "url": "http://103.196.177.230:80/series/rictms/rictms/1963.mkv"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/psks21SgKAHUtaXadRKrrTifctQ.jpg",
-        "category": "Movie Library",
-        "title": "Manifest S01E12",
-        "url": "http://103.196.177.230:80/series/rictms/rictms/1711.mkv"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/1XgtGAnheGKfrYtV3mLSFf13AJi.jpg",
-        "category": "Movie Library",
-        "title": "Stranger Things S03E02",
-        "url": "http://103.196.177.230:80/series/rictms/rictms/1298.mkv"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/lv8mWmpLuVKDvLk7omaxaCM1fzt.jpg",
-        "category": "Movie Library",
-        "title": "The Stand S01E09",
-        "url": "http://103.196.177.230:80/series/rictms/rictms/3933.mkv"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/jnI6qR3y9Hfn7hA1uCUJhYMkIAv.jpg",
-        "category": "Movie Library",
-        "title": "The Big Bang Theory S01E16",
-        "url": "http://103.196.177.230:80/series/rictms/rictms/5249.mkv"
+        "title": "Hunter x Hunter S01E127",
+        "url": "http://103.196.177.230/series/rictms/rictms/4764.mkv"
     }
 ]

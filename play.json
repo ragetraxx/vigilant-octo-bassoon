@@ -1,92 +1,92 @@
 [
     {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/b6IMGRpfH5PzaTX5zKpNIXOBRXW.jpg",
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/evdHgmavUPJOJyfKh4PEclugUmn.jpg",
         "category": "Movie Library",
-        "title": "The Outsider S01E03",
-        "url": "http://103.196.177.230/series/rictms/rictms/4323.mkv"
+        "title": "Cyberpunk: Edgerunners S01E04",
+        "url": "http://103.196.177.230/series/rictms/rictms/2060.mkv"
     },
     {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/vei2PdWm9UfeFOIKZcrdHHVgKqp.jpg",
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/sDSWi2qQEFMDDLClenCrXjlrQWe.jpg",
         "category": "Movie Library",
-        "title": "The Baby S01E01",
-        "url": "http://103.196.177.230/series/rictms/rictms/4614.mp4"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/62HCnUTziyWcpDaBO2i1DX17ljH.jpg",
-        "category": "Movie Library",
-        "title": "Top Gun: Maverick (2022)",
-        "url": "http://103.196.177.230/movie/rictms/rictms/227.mp4"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w1280/jy3EDNjby3CCJEi9IS5C47ZHaeO.jpg",
-        "category": "Movie Library",
-        "title": "Monarch: Legacy of Monsters S01E02",
-        "url": "http://103.196.177.230/series/rictms/rictms/2599.mkv"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/9KyWS1X2fkdc2RgHH3P0UeENzHk.jpg",
-        "category": "Movie Library",
-        "title": "Crash Landing on You S01E10",
-        "url": "http://103.196.177.230/series/rictms/rictms/3985.mkv"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/q0bhAlY77x9XwfpHYrDScHZvMQE.jpg",
-        "category": "Movie Library",
-        "title": "The Big Bang Theory S02E03",
-        "url": "http://103.196.177.230/series/rictms/rictms/5253.mkv"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/xZVoA1FuQjovjZSqMT3HqXWzUfG.jpg",
-        "category": "Movie Library",
-        "title": "Bloat (2025)",
-        "url": "http://103.196.177.230/movie/rictms/rictms/1586.mp4"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/utS5euWHlEdKBNnEFwjpZ2oGuhF.jpg",
-        "category": "Movie Library",
-        "title": "The Expendables 3 (2014)",
-        "url": "http://103.196.177.230/movie/rictms/rictms/4146.mp4"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/ubHHb40CWCdRdK759vMJH0J6DRI.jpg",
-        "category": "Movie Library",
-        "title": "Talamasca: The Secret Order S01E02",
-        "url": "http://103.196.177.230/series/rictms/rictms/1969.mkv"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/qlCn94ELdO1tYz8SAOe9iUVVdxD.jpg",
-        "category": "Movie Library",
-        "title": "Weak Hero S01E01",
-        "url": "http://103.196.177.230/series/rictms/rictms/3781.mp4"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w1280/AbABGEWs2IkvStrqyeBxbwmMlUV.jpg",
-        "category": "Movie Library",
-        "title": "Money Heist S01E12",
-        "url": "http://103.196.177.230/series/rictms/rictms/724.mkv"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/oUqsq3wN85OBXni60q18R3Iy5LV.jpg",
-        "category": "Movie Library",
-        "title": "Red Rose S01E05",
-        "url": "http://103.196.177.230/series/rictms/rictms/4438.mp4"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/7rNWBCcBW6YE6n49K5d2EWDpt0R.jpg",
-        "category": "Movie Library",
-        "title": "Under the Dome S01E01",
-        "url": "http://103.196.177.230/series/rictms/rictms/4277.mkv"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/x6rVyCAvvr0yprytwRRQhKw2l9e.jpg",
-        "category": "Movie Library",
-        "title": "The Glory S01E07",
-        "url": "http://103.196.177.230/series/rictms/rictms/1461.mkv"
+        "title": "Unfamiliar S01E05",
+        "url": "http://103.196.177.230/series/rictms/rictms/2940.mkv"
     },
     {
         "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/avJ1kF7vZUcpPX0wU2iAvalaHcE.jpg",
         "category": "Movie Library",
-        "title": "Hunter x Hunter S01E127",
-        "url": "http://103.196.177.230/series/rictms/rictms/4764.mkv"
+        "title": "Hunter x Hunter S01E95",
+        "url": "http://103.196.177.230/series/rictms/rictms/4732.mkv"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/7eGAjea8dawKURw6YJxMxC6qIm9.jpg",
+        "category": "Movie Library",
+        "title": "The Boys S04E01",
+        "url": "http://103.196.177.230/series/rictms/rictms/2829.mkv"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg",
+        "category": "Movie Library",
+        "title": "Avengers: Infinity War (2018)",
+        "url": "http://103.196.177.230/movie/rictms/rictms/4210.mp4"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/24F0Jwaf55LBdBsd5VXeAsVqYR.jpg",
+        "category": "Movie Library",
+        "title": "Band of Brothers S01E04",
+        "url": "http://103.196.177.230/series/rictms/rictms/2397.mkv"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w1280/zCc7AEH53aH8r61F5f9DkIQGeZC.jpg",
+        "category": "Movie Library",
+        "title": "Arcane S01E03",
+        "url": "http://103.196.177.230/series/rictms/rictms/688.mkv"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/vNOZ7aiyLqBoEqSWxmcn3MHewM8.jpg",
+        "category": "Movie Library",
+        "title": "Ozark S01E02",
+        "url": "http://103.196.177.230/series/rictms/rictms/1717.mkv"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/dnYWsIFDmygCjNg65rY3uBymx81.jpg",
+        "category": "Movie Library",
+        "title": "The Instigators (2024)",
+        "url": "http://103.196.177.230/movie/rictms/rictms/139.mkv"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/a4FJJ4jPpYc34jmtXzgm2uAS6V7.jpg",
+        "category": "Movie Library",
+        "title": "Euphoria S02E06",
+        "url": "http://103.196.177.230/series/rictms/rictms/1551.mkv"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/dTWVy61UfKXG6S9zV3tElHxTrC7.jpg",
+        "category": "Movie Library",
+        "title": "The Lincoln Lawyer S04E10",
+        "url": "http://103.196.177.230/series/rictms/rictms/5122.mkv"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w1280/qrzTC3qjUu0DRzN22fOqE6XZf3n.jpg",
+        "category": "Movie Library",
+        "title": "The Walking Dead S05E08",
+        "url": "http://103.196.177.230/series/rictms/rictms/500.mkv"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/FWIBME33cC9qRoS6Y2qui0QaWC.jpg",
+        "category": "Movie Library",
+        "title": "Invincible S03E04",
+        "url": "http://103.196.177.230/series/rictms/rictms/2714.mkv"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w1280/wJbEFBLyogHR1GoxfDXNIoP4k1w.jpg",
+        "category": "Movie Library",
+        "title": "Game of Thrones S03E10",
+        "url": "http://103.196.177.230/series/rictms/rictms/866.mkv"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/wKiOkZTN9lUUUNZLmtnwubZYONg.jpg",
+        "category": "Movie Library",
+        "title": "Minions: The Rise of Gru (2022)",
+        "url": "http://103.196.177.230/movie/rictms/rictms/305.mp4"
     }
 ]

@@ -9,7 +9,7 @@ RTMP_URL = os.getenv("RTMP_URL")
 OVERLAY = os.path.abspath("overlay.png")
 FONT_PATH = os.path.abspath("Roboto-Black.ttf")
 RETRY_DELAY = 60
-PREBUFFER_SECONDS = 5
+MAX_STREAM_RETRIES = 3  # Retry current movie if network drops mid-stream
 
 # ✅ Sanity Checks
 if not RTMP_URL:
@@ -32,50 +32,63 @@ def load_movies():
 def escape_drawtext(text):
     return text.replace('\\', '\\\\\\\\').replace(':', '\\:').replace("'", "\\'")
 
-def build_ffmpeg_command(url, title):
+def build_ffmpeg_command(movie):
+    title = movie.get("title", "Untitled")
+    url = movie.get("url")
     text = escape_drawtext(title)
 
-    input_options = []
-    if ".m3u8" in url or "streamsvr" in url:
-        print(f"🔐 Spoofing headers for {url}")
-        input_options = [
-            "-user_agent", "Mozilla/5.0",
-            "-headers", "Referer: https://hollymoviehd.cc\r\n"
-        ]
+    # ✅ Network options to keep connection alive and prevent 1x-speed HTTP drops
+    input_options = [
+        "-reconnect", "1",
+        "-reconnect_at_eof", "1",
+        "-reconnect_streamed", "1",
+        "-reconnect_delay_max", "10",
+        "-rw_timeout", "15000000",       # 15-second socket read/write timeout (microseconds)
+        "-analyzeduration", "10000000",
+        "-probesize", "10000000",
+        "-user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+    ]
+
+    # ✅ Optional: Custom referer/headers if specified in play.json
+    referer = movie.get("referer")
+    custom_headers = movie.get("headers")
+    header_str = ""
+    if referer:
+        header_str += f"Referer: {referer}\r\n"
+    if custom_headers:
+        header_str += f"{custom_headers}\r\n"
+    if header_str:
+        input_options.extend(["-headers", header_str])
 
     return [
         "ffmpeg",
-        "-re",
-        "-fflags", "+nobuffer",
-        "-flags", "low_delay",
-        "-threads", "1",
-        "-ss", str(PREBUFFER_SECONDS),
+        "-re",                           # Read input at native framerate
+        "-fflags", "+genpts+discardcorrupt",
         *input_options,
+        "-thread_queue_size", "4096",    # Input buffer for network jitter
         "-i", url,
+        "-thread_queue_size", "1024",
         "-i", OVERLAY,
         "-filter_complex",
-        f"[0:v]scale=1024:576:flags=lanczos,unsharp=5:5:0.8:5:5:0.0[v];"
-        f"[1:v]scale=1024:576[ol];"
+        f"[0:v]scale=1280:720:flags=bicubic[v];"
+        f"[1:v]scale=1280:720[ol];"
         f"[v][ol]overlay=0:0[vo];"
-        f"[vo]drawtext=fontfile='{FONT_PATH}':text='{text}':fontcolor=white:fontsize=15:x=35:y=35",
-        "-r", "29.97003",
+        f"[vo]drawtext=fontfile='{FONT_PATH}':text='{text}':fontcolor=white:fontsize=20:x=35:y=35",
+        "-r", "29.97",
         "-c:v", "libx264",
-        "-profile:v", "high",
-        "-level:v", "3.2",
-        "-preset", "ultrafast",
-        "-tune", "zerolatency",
-        "-g", "60",
+        "-preset", "veryfast",
+        "-g", "60",                      # Fixed 2-second keyframe interval
         "-keyint_min", "60",
         "-sc_threshold", "0",
-        "-b:v", "1000k",
-        "-maxrate", "1300k",
-        "-bufsize", "1300k",
+        "-b:v", "2500k",
+        "-maxrate", "3000k",
+        "-bufsize", "6000k",
         "-pix_fmt", "yuv420p",
         "-c:a", "aac",
-        "-profile:a", "aac_low",
         "-b:a", "128k",
         "-ar", "48000",
         "-ac", "2",
+        "-af", "aresample=async=1",      # Keeps audio synchronized with video
         "-f", "flv",
         RTMP_URL
     ]
@@ -88,34 +101,54 @@ def stream_movie(movie):
         print(f"❌ Skipping '{title}': no URL")
         return
 
-    print(f"🎬 Streaming: {title}")
-    command = build_ffmpeg_command(url, title)
+    retries = 0
+    while retries < MAX_STREAM_RETRIES:
+        print(f"🎬 Now streaming: {title} (Attempt {retries + 1}/{MAX_STREAM_RETRIES})")
+        command = build_ffmpeg_command(movie)
 
-    try:
-        process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
-        for line in process.stderr:
-            if "403 Forbidden" in line:
-                print(f"🚫 403 Forbidden! Skipping: {title}")
-                process.kill()
+        fatal_error = False
+        try:
+            process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+            
+            for line in process.stderr:
+                line_str = line.strip()
+                # Check for fatal unrecoverable errors (403/404)
+                if any(err in line_str for err in ["403 Forbidden", "404 Not Found", "Server returned 404"]):
+                    print(f"🚫 Stream URL error (403/404)! Skipping: {title}")
+                    process.kill()
+                    return
+                print(line_str)
+
+            process.wait()
+
+            # Normal exit (code 0 means full video completed)
+            if process.returncode == 0:
+                print(f"✅ Finished playing: {title}")
                 return
-            print(line.strip())
-        process.wait()
-    except Exception as e:
-        print(f"❌ FFmpeg crashed: {e}")
+            else:
+                print(f"⚠️ FFmpeg stopped with code {process.returncode}. Retrying in 3s...")
+                retries += 1
+                time.sleep(3)
+
+        except Exception as e:
+            print(f"❌ FFmpeg exception: {e}")
+            retries += 1
+            time.sleep(3)
+
+    print(f"❌ Max retries reached for '{title}'. Moving to next movie.")
 
 def main():
-    movies = load_movies()
-    if not movies:
-        print(f"📂 No entries in {PLAY_FILE}. Retrying in {RETRY_DELAY}s...")
-        time.sleep(RETRY_DELAY)
-        return main()
-
-    index = 0
     while True:
-        stream_movie(movies[index])
-        index = (index + 1) % len(movies)
-        print("⏭️  Next movie in 5s...")
-        time.sleep(5)
+        movies = load_movies()
+        if not movies:
+            print(f"📂 No entries in {PLAY_FILE}. Retrying in {RETRY_DELAY}s...")
+            time.sleep(RETRY_DELAY)
+            continue
+
+        for movie in movies:
+            stream_movie(movie)
+            print("⏭️ Next movie in 5s...")
+            time.sleep(5)
 
 if __name__ == "__main__":
     main()

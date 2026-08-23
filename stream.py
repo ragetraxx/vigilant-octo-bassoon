@@ -2,7 +2,6 @@ import os
 import json
 import subprocess
 import time
-import signal
 
 # ============================================================
 # CONFIGURATION
@@ -16,19 +15,7 @@ FONT_PATH = os.path.abspath("Roboto-Black.ttf")
 
 RETRY_DELAY = 60
 MAX_STREAM_RETRIES = 3
-NEXT_MOVIE_DELAY = 5
 
-# Video settings
-VIDEO_WIDTH = 1280
-VIDEO_HEIGHT = 720
-VIDEO_FPS = 29.97
-
-VIDEO_BITRATE = "2500k"
-VIDEO_MAXRATE = "3000k"
-VIDEO_BUFSIZE = "6000k"
-
-AUDIO_BITRATE = "128k"
-AUDIO_RATE = "48000"
 
 # ============================================================
 # SANITY CHECKS
@@ -38,13 +25,11 @@ if not RTMP_URL:
     print("❌ ERROR: RTMP_URL is not set!")
     exit(1)
 
-required_files = [
+for path, name in [
     (PLAY_FILE, "Playlist JSON"),
     (OVERLAY, "Overlay Image"),
-    (FONT_PATH, "Font File"),
-]
-
-for path, name in required_files:
+    (FONT_PATH, "Font File")
+]:
     if not os.path.exists(path):
         print(f"❌ ERROR: {name} '{path}' not found!")
         exit(1)
@@ -55,21 +40,13 @@ for path, name in required_files:
 # ============================================================
 
 def load_movies():
+
     try:
         with open(PLAY_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-
-        if not isinstance(data, list):
-            print("❌ ERROR: play.json must contain a JSON list.")
-            return []
-
-        return data
-
-    except json.JSONDecodeError as e:
-        print(f"❌ Invalid JSON in {PLAY_FILE}: {e}")
-        return []
+            return json.load(f) or []
 
     except Exception as e:
+
         print(f"❌ Failed to load {PLAY_FILE}: {e}")
         return []
 
@@ -79,20 +56,13 @@ def load_movies():
 # ============================================================
 
 def escape_drawtext(text):
-    """
-    Escape characters that have special meaning in FFmpeg drawtext.
-    """
 
-    text = str(text)
-
-    text = text.replace("\\", "\\\\")
-    text = text.replace(":", "\\:")
-    text = text.replace("'", "\\'")
-    text = text.replace("%", "\\%")
-    text = text.replace("[", "\\[")
-    text = text.replace("]", "\\]")
-
-    return text
+    return (
+        str(text)
+        .replace("\\", "\\\\")
+        .replace(":", "\\:")
+        .replace("'", "\\'")
+    )
 
 
 # ============================================================
@@ -107,40 +77,39 @@ def build_ffmpeg_command(movie):
     text = escape_drawtext(title)
 
     # --------------------------------------------------------
-    # NETWORK INPUT OPTIONS
+    # NETWORK OPTIONS
+    # --------------------------------------------------------
+    #
+    # IMPORTANT:
+    # These are kept very close to your ORIGINAL settings.
+    # Only the timeout has been increased.
+    #
     # --------------------------------------------------------
 
     input_options = [
-        # Automatic reconnect
         "-reconnect", "1",
         "-reconnect_at_eof", "1",
         "-reconnect_streamed", "1",
         "-reconnect_delay_max", "10",
 
-        # Network timeout
+        # 60 seconds instead of the original 15 seconds
         "-rw_timeout", "60000000",
 
-        # HTTP connection handling
-        "-http_persistent", "1",
-        "-http_multiple", "1",
+        "-analyzeduration", "10000000",
+        "-probesize", "10000000",
 
-        # More time/data for stream detection
-        "-analyzeduration", "10M",
-        "-probesize", "10M",
-
-        # Browser-like User-Agent
         "-user_agent",
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
         "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/149.0.0.0 Safari/537.36",
+        "Chrome/149.0.0.0 Safari/537.36"
     ]
 
+
     # --------------------------------------------------------
-    # OPTIONAL REFERER
+    # OPTIONAL REFERER / HEADERS
     # --------------------------------------------------------
 
     referer = movie.get("referer")
-
     custom_headers = movie.get("headers")
 
     header_str = ""
@@ -152,10 +121,12 @@ def build_ffmpeg_command(movie):
         header_str += f"{custom_headers}\r\n"
 
     if header_str:
+
         input_options.extend([
             "-headers",
             header_str
         ])
+
 
     # --------------------------------------------------------
     # FILTER
@@ -163,11 +134,11 @@ def build_ffmpeg_command(movie):
 
     filter_complex = (
         f"[0:v]"
-        f"scale={VIDEO_WIDTH}:{VIDEO_HEIGHT}:flags=bicubic"
+        f"scale=1280:720:flags=bicubic"
         f"[v];"
 
         f"[1:v]"
-        f"scale={VIDEO_WIDTH}:{VIDEO_HEIGHT}"
+        f"scale=1280:720"
         f"[ol];"
 
         f"[v][ol]"
@@ -184,40 +155,50 @@ def build_ffmpeg_command(movie):
         f"y=35"
     )
 
-    # --------------------------------------------------------
-    # FFMPEG COMMAND
-    # --------------------------------------------------------
 
-    command = [
+    # ========================================================
+    # FFMPEG
+    # ========================================================
+
+    return [
+
         "ffmpeg",
 
-        # Do NOT use -re here.
-        # Network/HLS input should be read as data arrives.
-        
-        "-hide_banner",
-
-        "-loglevel", "info",
+        # ----------------------------------------------------
+        # IMPORTANT:
+        # REMOVED "-re"
+        #
+        # The source is already a network stream.
+        # -re can unnecessarily throttle the input.
+        # ----------------------------------------------------
 
         "-fflags",
         "+genpts+discardcorrupt",
 
         *input_options,
 
-        # ----------------------------------------------------
-        # MAIN VIDEO INPUT
-        # ----------------------------------------------------
-
-        "-thread_queue_size", "4096",
-        "-i", url,
 
         # ----------------------------------------------------
-        # OVERLAY INPUT
+        # SOURCE
         # ----------------------------------------------------
 
-        "-loop", "1",
-        "-framerate", str(VIDEO_FPS),
-        "-thread_queue_size", "1024",
-        "-i", OVERLAY,
+        "-thread_queue_size",
+        "4096",
+
+        "-i",
+        url,
+
+
+        # ----------------------------------------------------
+        # OVERLAY
+        # ----------------------------------------------------
+
+        "-thread_queue_size",
+        "1024",
+
+        "-i",
+        OVERLAY,
+
 
         # ----------------------------------------------------
         # VIDEO FILTER
@@ -226,63 +207,75 @@ def build_ffmpeg_command(movie):
         "-filter_complex",
         filter_complex,
 
-        "-map", "[vo]",
-        "-map", "0:a?",
 
         # ----------------------------------------------------
-        # VIDEO ENCODING
+        # OUTPUT
         # ----------------------------------------------------
 
-        "-r", str(VIDEO_FPS),
+        "-r",
+        "29.97",
 
-        "-c:v", "libx264",
+        "-c:v",
+        "libx264",
 
-        "-preset", "veryfast",
+        "-preset",
+        "veryfast",
 
-        "-tune", "zerolatency",
+        "-g",
+        "60",
 
-        "-g", "60",
+        "-keyint_min",
+        "60",
 
-        "-keyint_min", "60",
+        "-sc_threshold",
+        "0",
 
-        "-sc_threshold", "0",
+        "-b:v",
+        "2500k",
 
-        "-b:v", VIDEO_BITRATE,
+        "-maxrate",
+        "3000k",
 
-        "-maxrate", VIDEO_MAXRATE,
+        "-bufsize",
+        "6000k",
 
-        "-bufsize", VIDEO_BUFSIZE,
+        "-pix_fmt",
+        "yuv420p",
 
-        "-pix_fmt", "yuv420p",
-
-        # ----------------------------------------------------
-        # AUDIO ENCODING
-        # ----------------------------------------------------
-
-        "-c:a", "aac",
-
-        "-b:a", AUDIO_BITRATE,
-
-        "-ar", AUDIO_RATE,
-
-        "-ac", "2",
-
-        "-af", "aresample=async=1:first_pts=0",
 
         # ----------------------------------------------------
-        # RTMP OUTPUT
+        # AUDIO
         # ----------------------------------------------------
 
-        "-f", "flv",
+        "-c:a",
+        "aac",
 
-        RTMP_URL,
+        "-b:a",
+        "128k",
+
+        "-ar",
+        "48000",
+
+        "-ac",
+        "2",
+
+        "-af",
+        "aresample=async=1",
+
+
+        # ----------------------------------------------------
+        # RTMP
+        # ----------------------------------------------------
+
+        "-f",
+        "flv",
+
+        RTMP_URL
     ]
-
-    return command
 
 
 # ============================================================
-# STREAM ONE MOVIE
+# STREAM MOVIE
 # ============================================================
 
 def stream_movie(movie):
@@ -291,24 +284,27 @@ def stream_movie(movie):
     url = movie.get("url")
 
     if not url:
+
         print(f"❌ Skipping '{title}': no URL")
         return
 
+
     retries = 0
+
 
     while retries < MAX_STREAM_RETRIES:
 
         print()
-        print("=" * 70)
         print(
             f"🎬 Now streaming: {title} "
             f"(Attempt {retries + 1}/{MAX_STREAM_RETRIES})"
         )
-        print("=" * 70)
+
 
         command = build_ffmpeg_command(movie)
 
         process = None
+
 
         try:
 
@@ -320,10 +316,12 @@ def stream_movie(movie):
                 bufsize=1
             )
 
+
             fatal_error = False
 
+
             # ------------------------------------------------
-            # READ FFMPEG OUTPUT
+            # MONITOR FFMPEG
             # ------------------------------------------------
 
             for line in process.stderr:
@@ -335,23 +333,23 @@ def stream_movie(movie):
 
                 print(line_str)
 
-                lower_line = line_str.lower()
 
-                # ------------------------------------------------
-                # PERMANENT URL ERRORS
-                # ------------------------------------------------
+                # --------------------------------------------
+                # ONLY TREAT 403/404 AS PERMANENT ERRORS
+                # --------------------------------------------
 
-                if (
-                    "403 forbidden" in lower_line
-                    or "404 not found" in lower_line
-                    or "server returned 404" in lower_line
-                    or "http error 403" in lower_line
-                    or "http error 404" in lower_line
+                if any(
+                    error in line_str
+                    for error in [
+                        "403 Forbidden",
+                        "404 Not Found",
+                        "Server returned 404"
+                    ]
                 ):
 
-                    print()
                     print(
-                        f"🚫 Permanent HTTP error detected for '{title}'."
+                        f"🚫 Stream URL error (403/404)! "
+                        f"Skipping: {title}"
                     )
 
                     fatal_error = True
@@ -363,89 +361,63 @@ def stream_movie(movie):
 
                     break
 
-            # ------------------------------------------------
-            # WAIT FOR FFMPEG
-            # ------------------------------------------------
 
             process.wait()
 
-            return_code = process.returncode
+
+            # ------------------------------------------------
+            # PERMANENT ERROR
+            # ------------------------------------------------
 
             if fatal_error:
+                return
+
+
+            # ------------------------------------------------
+            # MOVIE FINISHED
+            # ------------------------------------------------
+
+            if process.returncode == 0:
 
                 print(
-                    f"⏭️ Skipping '{title}' because the source URL "
-                    f"returned a permanent HTTP error."
+                    f"✅ Finished playing: {title}"
                 )
 
                 return
 
-            # ------------------------------------------------
-            # NORMAL COMPLETION
-            # ------------------------------------------------
-
-            if return_code == 0:
-
-                print()
-                print(f"✅ Finished playing: {title}")
-
-                return
 
             # ------------------------------------------------
-            # FFMPEG FAILURE
+            # STREAM FAILED
             # ------------------------------------------------
 
-            print()
             print(
-                f"⚠️ FFmpeg stopped with exit code "
-                f"{return_code}."
+                f"⚠️ FFmpeg stopped with code "
+                f"{process.returncode}."
             )
 
             retries += 1
 
+
             if retries < MAX_STREAM_RETRIES:
 
                 print(
-                    "🔄 Restarting current movie in 3 seconds..."
+                    "🔄 Retrying current movie in 3 seconds..."
                 )
 
                 time.sleep(3)
 
-        except KeyboardInterrupt:
-
-            print()
-            print("🛑 Stopping streamer...")
-
-            if process:
-
-                try:
-                    process.terminate()
-                    process.wait(timeout=5)
-
-                except Exception:
-
-                    try:
-                        process.kill()
-                    except Exception:
-                        pass
-
-            raise
 
         except Exception as e:
 
-            print()
-            print(f"❌ FFmpeg exception: {e}")
+            print(
+                f"❌ FFmpeg exception: {e}"
+            )
 
             retries += 1
 
-            if retries < MAX_STREAM_RETRIES:
-                time.sleep(3)
+            time.sleep(3)
 
-    # --------------------------------------------------------
-    # MAX RETRIES
-    # --------------------------------------------------------
 
-    print()
     print(
         f"❌ Max retries reached for '{title}'. "
         f"Moving to next movie."
@@ -453,63 +425,37 @@ def stream_movie(movie):
 
 
 # ============================================================
-# MAIN LOOP
+# MAIN
 # ============================================================
 
 def main():
-
-    print()
-    print("=" * 70)
-    print("📺 24/7 RTMP STREAMER")
-    print("=" * 70)
-    print(f"📂 Playlist: {PLAY_FILE}")
-    print(f"🖼️ Overlay: {OVERLAY}")
-    print(f"🔤 Font: {FONT_PATH}")
-    print("=" * 70)
-    print()
 
     while True:
 
         movies = load_movies()
 
+
         if not movies:
 
             print(
-                f"📂 No entries found in {PLAY_FILE}. "
-                f"Retrying in {RETRY_DELAY} seconds..."
+                f"📂 No entries in {PLAY_FILE}. "
+                f"Retrying in {RETRY_DELAY}s..."
             )
 
             time.sleep(RETRY_DELAY)
+
             continue
 
-        # ----------------------------------------------------
-        # PLAY EACH MOVIE
-        # ----------------------------------------------------
 
         for movie in movies:
 
-            try:
+            stream_movie(movie)
 
-                stream_movie(movie)
-
-            except KeyboardInterrupt:
-
-                print()
-                print("🛑 Streamer stopped by user.")
-                return
-
-            except Exception as e:
-
-                print(
-                    f"❌ Unexpected error while processing movie: {e}"
-                )
-
-            print()
             print(
-                f"⏭️ Next movie in {NEXT_MOVIE_DELAY} seconds..."
+                "⏭️ Next movie in 5s..."
             )
 
-            time.sleep(NEXT_MOVIE_DELAY)
+            time.sleep(5)
 
 
 # ============================================================

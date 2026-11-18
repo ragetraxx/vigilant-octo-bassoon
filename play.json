@@ -1,92 +1,92 @@
 [
     {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/w694X9YyFPyZ78U9nQsNM33pbWE.jpg",
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/rqueSyctiasgINQ9xNGFeHnhCog.jpg",
         "category": "Movie Library",
-        "title": "Bates Motel S01E07",
-        "url": "http://103.196.177.230/series/bctvnsm/bctvnsm01/4190.mkv"
+        "title": "The Stand S01E05",
+        "url": "http://103.196.177.230/series/bctvnsm/bctvnsm01/3929.mkv"
     },
     {
-        "image": "https://image.tmdb.org/t/p/w1280/5LSr6potOoZQEL1NaUFp8X3Q3ro.jpg",
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/g1jxQe0I4nbCaW5DoyAaLcrfswV.jpg",
         "category": "Movie Library",
-        "title": "The Walking Dead S05E12",
-        "url": "http://103.196.177.230/series/bctvnsm/bctvnsm01/504.mkv"
+        "title": "Vinland Saga S02E09",
+        "url": "http://103.196.177.230/series/bctvnsm/bctvnsm01/2318.mkv"
     },
     {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/fHFvxdoZImxQ3zIEWLZjDsRG9Dl.jpg",
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/7Y3O7q3mOt9f4FSChUIFyAZyRGa.jpg",
         "category": "Movie Library",
-        "title": "Money Heist S03E03",
-        "url": "http://103.196.177.230/series/bctvnsm/bctvnsm01/1094.mkv"
+        "title": "Gachiakuta S01E04",
+        "url": "http://103.196.177.230/series/bctvnsm/bctvnsm01/2114.mkv"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/aTjfWml9Prd8cUB9cfk8yOAEh7v.jpg",
+        "category": "Movie Library",
+        "title": "Loki S01E03",
+        "url": "http://103.196.177.230/series/bctvnsm/bctvnsm01/1073.mkv"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/eWgtva5EavsnGIf3fRZD6Lxj7ge.jpg",
+        "category": "Movie Library",
+        "title": "Gachiakuta S01E06",
+        "url": "http://103.196.177.230/series/bctvnsm/bctvnsm01/2116.mkv"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w1280/o4IX9Mm0kpLITVANJMx7inyEUaY.jpg",
+        "category": "Movie Library",
+        "title": "Game of Thrones S01E01",
+        "url": "http://103.196.177.230/series/bctvnsm/bctvnsm01/457.mkv"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/ynN96chZ1anKjrmeFlkWvHGLK0O.jpg",
+        "category": "Movie Library",
+        "title": "Frieren: Beyond Journey's End S01E24",
+        "url": "http://103.196.177.230/series/bctvnsm/bctvnsm01/2106.mkv"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/d230QyQTJEv1ieh9kfDAucsR5Cz.jpg",
+        "category": "Movie Library",
+        "title": "The Glory S01E02",
+        "url": "http://103.196.177.230/series/bctvnsm/bctvnsm01/1456.mkv"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/3WXy9QOXSbJCF5OfhfKed0TcFzk.jpg",
+        "category": "Movie Library",
+        "title": "Better Call Saul S03E10",
+        "url": "http://103.196.177.230/series/bctvnsm/bctvnsm01/2413.mp4"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/pRVF7olO9PFw1JjtzMGVbRvP48P.jpg",
+        "category": "Movie Library",
+        "title": "One Day S01E11",
+        "url": "http://103.196.177.230/series/bctvnsm/bctvnsm01/3495.mp4"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/jUmXfVm4t8EXG43IvdEYavrkPGT.jpg",
+        "category": "Movie Library",
+        "title": "Sharp Objects S01E03",
+        "url": "http://103.196.177.230/series/bctvnsm/bctvnsm01/4825.mkv"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w1280/w0IbY3aetrS01ZV0YySsLK1ypIA.jpg",
+        "category": "Movie Library",
+        "title": "Money Heist S01E05",
+        "url": "http://103.196.177.230/series/bctvnsm/bctvnsm01/717.mkv"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/dx8qs7IutNjlEyhCY3QaFuTKbiG.jpg",
+        "category": "Movie Library",
+        "title": "Emily in Paris S03E01",
+        "url": "http://103.196.177.230/series/bctvnsm/bctvnsm01/1023.mkv"
+    },
+    {
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/gmNLUrlRLPS5evVvh0wEI5I4cIs.jpg",
+        "category": "Movie Library",
+        "title": "The Queen's Gambit S01E02",
+        "url": "http://103.196.177.230/series/bctvnsm/bctvnsm01/1413.mkv"
     },
     {
         "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/7zv4lXi3YqlCCDtdqO309RWQp2.jpg",
         "category": "Movie Library",
-        "title": "Shangri-La Frontier S02E18",
-        "url": "http://103.196.177.230/series/bctvnsm/bctvnsm01/2262.mkv"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/gy2GCnPzRtwaY8kLexz2Cs9dDtb.jpg",
-        "category": "Movie Library",
-        "title": "Outlander S03E01",
-        "url": "http://103.196.177.230/series/bctvnsm/bctvnsm01/3513.mkv"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/i6C8T76p9kbHs62sz6VRVCnTZTS.jpg",
-        "category": "Movie Library",
-        "title": "Peaky Blinders S06E02",
-        "url": "http://103.196.177.230/series/bctvnsm/bctvnsm01/1195.mkv"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/b9dLM01DTcBvNKkkzG7VKrBRwQ2.jpg",
-        "category": "Movie Library",
-        "title": "Hunter x Hunter S01E24",
-        "url": "http://103.196.177.230/series/bctvnsm/bctvnsm01/4661.mkv"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/zyQQ7wFuCvH6MzJcUKy6N6ouMYs.jpg",
-        "category": "Movie Library",
-        "title": "Ip Man (2008)",
-        "url": "http://103.196.177.230/movie/bctvnsm/bctvnsm01/275.mp4"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/7TLabqIue35VZCP9wMumPxBiPMs.jpg",
-        "category": "Movie Library",
-        "title": "Tempest S01E01",
-        "url": "http://103.196.177.230/series/bctvnsm/bctvnsm01/4874.mkv"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/rX5IPjjU8zz26httjy7PbH85Mqw.jpg",
-        "category": "Movie Library",
-        "title": "Vikings: Valhalla S03E08",
-        "url": "http://103.196.177.230/series/bctvnsm/bctvnsm01/1815.mkv"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/j0R5yjKebPTgxqvqTkq5zuumT7e.jpg",
-        "category": "Movie Library",
-        "title": "The Delivery Rider (2025)",
-        "url": "http://103.196.177.230/movie/bctvnsm/bctvnsm01/592.ts"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/6dr4OXF3GIhvQi3FlkBetNaWfpI.jpg",
-        "category": "Movie Library",
-        "title": "Teen Wolf S04E09",
-        "url": "http://103.196.177.230/series/bctvnsm/bctvnsm01/4367.mkv"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/4fYKNPg6npvAr8S3gVs6NDmiz9Z.jpg",
-        "category": "Movie Library",
-        "title": "Attack on Titan S04E07",
-        "url": "http://103.196.177.230/series/bctvnsm/bctvnsm01/2370.mp4"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/ode14q7WtDugFDp78fo9lCsmay9.jpg",
-        "category": "Movie Library",
-        "title": "The Maze Runner (2014)",
-        "url": "http://103.196.177.230/movie/bctvnsm/bctvnsm01/661.mp4"
-    },
-    {
-        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/5JjriIqwqK5i3BhGlyFDSOWA0EE.jpg",
-        "category": "Movie Library",
-        "title": "Tokyo Revengers S01E12",
-        "url": "http://103.196.177.230/series/bctvnsm/bctvnsm01/4557.mkv"
+        "title": "Shangri-La Frontier S02E04",
+        "url": "http://103.196.177.230/series/bctvnsm/bctvnsm01/2248.mkv"
     }
 ]
